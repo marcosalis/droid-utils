@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="DroidMavaUtils" >
+
+    <target name="process-config" >
+
+        <filterset id="build-tokens" >
+
+            <filter
+                token="droid.debug"
+                value="${droid.debug}" />
+        </filterset>
+
+        <copy
+            file="../droid-mava-utils/config/DroidConfig.java"
+            overwrite="true"
+            todir="../droid-mava-utils/src/com/github/luluvise/droid_utils" >
+
+            <filterset refid="build-tokens" />
+        </copy>
+    </target>
+
+    <target
+        name="droid-debug-config"
+        depends="droid-read-debug-properties, process-config" />
+
+    <target
+        name="droid-release-config"
+        depends="droid-read-release-properties, process-config" />
+
+    <target name="droid-read-debug-properties" >
+
+        <property file="../droid-mava-utils/config_debug.properties" />
+    </target>
+
+    <target name="droid-read-release-properties" >
+
+        <property file="../droid-mava-utils/config_release.properties" />
+    </target>
+
+</project>
