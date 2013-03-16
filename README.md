@@ -1,6 +1,6 @@
 CODING CONVENTIONS
-- See the following document for Android coding conventions: http://source.android.com/source/code-style.html
-- 
+See the following document for Android coding conventions:
+http://source.android.com/source/code-style.html
 
 LICENSE
 Copyright 2013 Luluvise Ltd
