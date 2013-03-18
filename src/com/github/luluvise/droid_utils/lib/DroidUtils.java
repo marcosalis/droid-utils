@@ -366,16 +366,28 @@ public class DroidUtils {
 	}
 
 	/**
-	 * Creates an {@link Intent} to open the passed URL or URI with the default
+	 * Returns an {@link Intent} with action {@link Intent#ACTION_VIEW} to open
+	 * the Google Play page for the passed package name.
+	 * 
+	 * @param packageName
+	 *            A full, valid Google Play application package name
+	 */
+	@Nonnull
+	public static Intent getApplicationMarketPage(@Nonnull String packageName) {
+		return getViewUrlIntent("market://details?id=" + packageName);
+	}
+
+	/**
+	 * Creates an {@link Intent} to open the passed URI with the default
 	 * application that handles {@link Intent#ACTION_VIEW} for that content.
 	 * 
-	 * @param url
-	 *            The url string (must be non null)
+	 * @param uri
+	 *            The URI string (must be non null)
 	 * @return The created intent
 	 */
 	@Nonnull
-	public static Intent getViewUrlIntent(@Nonnull String url) {
-		return new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+	public static Intent getViewUrlIntent(@Nonnull String uri) {
+		return new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
 	}
 
 	/**
