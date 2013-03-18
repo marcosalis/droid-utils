@@ -366,15 +366,28 @@ public class DroidUtils {
 	}
 
 	/**
+	 * Creates an {@link Intent} to open the passed URL or URI with the default
+	 * application that handles {@link Intent#ACTION_VIEW} for that content.
+	 * 
+	 * @param url
+	 *            The url string (must be non null)
+	 * @return The created intent
+	 */
+	@Nonnull
+	public static Intent getViewUrlIntent(@Nonnull String url) {
+		return new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+	}
+
+	/**
 	 * Checks whether an action has a matching Intent in the current device
 	 * 
 	 * @param context
 	 *            A Context
 	 * @param action
-	 *            The action to check
+	 *            The action to check (see {@link Intent} docs
 	 * @return true if an Intent is available, false otherwise
 	 */
-	public static boolean isIntentAvailable(@Nonnull Context context, String action) {
+	public static boolean isIntentAvailable(@Nonnull Context context, @Nonnull String action) {
 		final PackageManager packageManager = context.getPackageManager();
 		final Intent intent = new Intent(action);
 		List<ResolveInfo> list = packageManager.queryIntentActivities(intent,
