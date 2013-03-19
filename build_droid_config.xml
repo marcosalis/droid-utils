@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="DroidMavaUtils" >
+<project name="droid-mava-utils" >
 
     <target name="process-config" >
 
