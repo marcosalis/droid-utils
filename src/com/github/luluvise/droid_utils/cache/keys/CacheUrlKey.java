@@ -15,6 +15,8 @@
  */
 package com.github.luluvise.droid_utils.cache.keys;
 
+import javax.annotation.Nonnull;
+
 import android.os.Parcelable;
 
 import com.github.luluvise.droid_utils.lib.HashUtils.CacheKey;
@@ -35,10 +37,12 @@ public interface CacheUrlKey extends CacheKey, Parcelable {
 	/**
 	 * Gets the hash string used as a key
 	 */
+	@Nonnull
 	public String hash();
 
 	/**
 	 * Gets the string URL hold by this {@link CacheUrlKey}
 	 */
+	@Nonnull
 	public String getUrl();
 }
