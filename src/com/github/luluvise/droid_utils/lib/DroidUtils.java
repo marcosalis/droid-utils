@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import android.annotation.TargetApi;
@@ -343,22 +344,43 @@ public class DroidUtils {
 
 	/**
 	 * Create a chooser intent to open the email composer with the specified
-	 * email, subject and message.
+	 * single email recipient, subject and message.
 	 * 
 	 * @param activity
-	 *            The {@link Activity} to start the chooser intent
-	 * @param email
-	 *            The email to send the message
+	 *            The {@link Activity} to start the chooser intent with
+	 * @param chooserMessage
+	 *            The (optional) message to display in the intent chooser
+	 * @param recipient
+	 *            The email address to send the message to
 	 * @param subject
 	 *            The subject of the message
 	 * @param message
-	 *            The message
+	 *            The email message
 	 */
-	public static void sendEmail(@Nonnull Activity activity, String chooserMessage, String email,
-			String subject, String message) {
+	public static void sendEmail(@Nonnull Activity activity, @Nullable String chooserMessage,
+			@Nullable String recipient, @Nullable String subject, @Nullable String message) {
+		sendEmail(activity, chooserMessage, new String[] { recipient }, subject, message);
+	}
+
+	/**
+	 * Create a chooser intent to open the email composer with the specified
+	 * email recipients, subject and message.
+	 * 
+	 * @param activity
+	 *            The {@link Activity} to start the chooser intent with
+	 * @param chooserMessage
+	 *            The (optional) message to display in the intent chooser
+	 * @param recipients
+	 *            The email addresses array to send the message to
+	 * @param subject
+	 *            The subject of the message
+	 * @param message
+	 *            The email message
+	 */
+	public static void sendEmail(@Nonnull Activity activity, @Nullable String chooserMessage,
+			@Nonnull String[] recipients, @Nullable String subject, @Nullable String message) {
 		final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
-		final String recipientList[] = { email };
-		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, recipientList);
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, recipients);
 		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
 		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, message);
 		emailIntent.setType("plain/text");
