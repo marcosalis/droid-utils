@@ -60,7 +60,15 @@ public class IndexScroller {
 		}
 	}
 
+	// UI constants
+	public static final int INDEX_BAR_MARGIN = 5; // pixels
+	public static final int INDEX_BAR_WIDTH = 20; // pixels
+	private static final int PREVIEW_PADDING = 5; // pixels
+
 	private static final int FADE_DELAY = 2000;
+	private static final int INDEX_TEXT_COLOR = Color.BLACK;
+	@SuppressWarnings("unused")
+	private static final int INDEX_BG_COLOR = Color.TRANSPARENT;
 
 	private Handler mHandler = new ScrollerHandler(this);
 
@@ -91,9 +99,9 @@ public class IndexScroller {
 		mListView = lv;
 		setAdapter(mListView.getAdapter());
 
-		mIndexbarWidth = 20 * mDensity;
-		mIndexbarMargin = 5 * mDensity;
-		mPreviewPadding = 5 * mDensity;
+		mIndexbarWidth = INDEX_BAR_WIDTH * mDensity;
+		mIndexbarMargin = INDEX_BAR_MARGIN * mDensity;
+		mPreviewPadding = PREVIEW_PADDING * mDensity;
 	}
 
 	public void setIndexFadingEnabled(boolean fadeIndex) {
@@ -105,21 +113,21 @@ public class IndexScroller {
 		if (mState == STATE_HIDDEN)
 			return;
 
+		// Marco Salis: no background for the index
 		// mAlphaRate determines the rate of opacity
-		/*
-		 * msalis: no background Paint indexbarPaint = new Paint();
-		 * indexbarPaint.setColor(Color.BLACK); indexbarPaint.setAlpha((int) (64
-		 * * mAlphaRate)); indexbarPaint.setAntiAlias(true);
-		 * canvas.drawRoundRect(mIndexbarRect, 5 * mDensity, 5 * mDensity,
-		 * indexbarPaint);
-		 */
+		// Paint indexbarPaint = new Paint();
+		// indexbarPaint.setColor(INDEX_BG_COLOR);
+		// indexbarPaint.setAlpha((int) (64 * mAlphaRate));
+		// indexbarPaint.setAntiAlias(true);
+		// canvas.drawRoundRect(mIndexbarRect, 5 * mDensity, 5 * mDensity,
+		// indexbarPaint);
 
 		final String[] sections = getSections();
 		if (sections != null && sections.length > 0) {
 			// Preview is shown when mCurrentSection is set
 			if (mCurrentSection >= 0) {
 				Paint previewPaint = new Paint();
-				previewPaint.setColor(Color.BLACK);
+				previewPaint.setColor(INDEX_TEXT_COLOR);
 				previewPaint.setAlpha(96);
 				previewPaint.setAntiAlias(true);
 				previewPaint.setShadowLayer(3, 0, 0, Color.argb(64, 0, 0, 0));
@@ -143,8 +151,7 @@ public class IndexScroller {
 			}
 
 			Paint indexPaint = new Paint();
-			// indexPaint.setColor(Color.WHITE);
-			indexPaint.setColor(Color.BLACK);
+			indexPaint.setColor(INDEX_TEXT_COLOR);
 			indexPaint.setAlpha((int) (255 * mAlphaRate));
 			indexPaint.setAntiAlias(true);
 			indexPaint.setTextSize(12 * mScaledDensity);
