@@ -123,7 +123,7 @@ public class BaseAlphabetSectionIndexer<T> extends DataSetObserver implements Se
 
 	@Override
 	public Object[] getSections() {
-		return mActiveSections.toArray();
+		return mActiveSections.toArray(new String[mActiveSections.size()]);
 	}
 
 	@Override
