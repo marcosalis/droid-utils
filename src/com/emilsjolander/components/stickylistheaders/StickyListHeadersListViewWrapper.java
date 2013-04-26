@@ -47,16 +47,7 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 	private boolean drawSelectorOnTop = false;
 	private Rect selectorBounds = new Rect();
 
-	private GestureDetector gestureDetector = new GestureDetector(getContext(),
-			new GestureDetector.SimpleOnGestureListener() {
-
-				@Override
-				public void onShowPress(MotionEvent e) {
-					showSelector = true;
-					invalidate(getRefreshedSelectorBounds());
-				}
-
-			});
+	private final GestureDetector gestureDetector;
 
 	private OnTouchListener onHeaderTouchListener = new OnTouchListener() {
 
@@ -80,24 +71,22 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 			return isScrolling;
 		}
 	};
-	
-	private OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener()
-    {
-        @Override
-        public void onGlobalLayout()
-        {
-    		if(headerChangedDuringLayout){
-    			if(getChildCount() > 1){
-    				removeViewAt(1);
-    			}
-    			if(header != null){
-    				addView(header);
-    			}
-    		}
-    		headerChangedDuringLayout = false;
-        }
-    };
-    
+
+	private OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+		@Override
+		public void onGlobalLayout() {
+			if (headerChangedDuringLayout) {
+				if (getChildCount() > 1) {
+					removeViewAt(1);
+				}
+				if (header != null) {
+					addView(header);
+				}
+			}
+			headerChangedDuringLayout = false;
+		}
+	};
+
 	private boolean inLayout;
 	private boolean headerChangedDuringLayout;
 
@@ -112,7 +101,11 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 	public StickyListHeadersListViewWrapper(Context context,
 			AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		if(!HONEYCOMB_OR__ABOVE){
+
+		this.gestureDetector = !this.isInEditMode() ? new GestureDetector(
+				context, new GestureListener()) : null;
+
+		if (!HONEYCOMB_OR__ABOVE) {
 			try {
 				mTop = View.class.getDeclaredField("mTop");
 				mBottom = View.class.getDeclaredField("mBottom");
@@ -123,7 +116,6 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 			}
 		}
 		viewConfig = ViewConfiguration.get(context);
-		
 
 		getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
 	}
@@ -139,7 +131,8 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 		this.header = header;
 		if (header != null) {
 			View list = getChildAt(0);
-			LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT,
+			LayoutParams params = new LayoutParams(list.getMeasuredWidth()
+					- list.getPaddingLeft() - list.getPaddingRight(),
 					LayoutParams.WRAP_CONTENT);
 			params.leftMargin = list.getPaddingLeft();
 			params.rightMargin = list.getPaddingRight();
@@ -148,9 +141,9 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 
 			header.setOnTouchListener(onHeaderTouchListener);
 
-			if(inLayout){
+			if (inLayout) {
 				headerChangedDuringLayout = true;
-			}else{
+			} else {
 				addView(header);
 			}
 		}
@@ -167,9 +160,9 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 
 	View removeHeader() {
 		if (this.header != null) {
-			if(inLayout){
+			if (inLayout) {
 				headerChangedDuringLayout = true;
-			}else{
+			} else {
 				removeView(this.header);
 			}
 			this.header.setOnTouchListener(null);
@@ -264,4 +257,15 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 		this.drawSelectorOnTop = onTop;
 	}
 
+	private class GestureListener extends
+			GestureDetector.SimpleOnGestureListener {
+
+		@Override
+		public void onShowPress(final MotionEvent e) {
+			StickyListHeadersListViewWrapper.this.showSelector = true;
+			StickyListHeadersListViewWrapper.this
+					.invalidate(StickyListHeadersListViewWrapper.this
+							.getRefreshedSelectorBounds());
+		}
+	}
 }

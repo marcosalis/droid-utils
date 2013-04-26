@@ -214,7 +214,7 @@ public class IndexScroller {
 				// that section
 				mCurrentSection = getSectionByPoint(ev.getY());
 				final int positionForSection = mIndexer.getPositionForSection(mCurrentSection);
-				mListView.setSelection(mListView.translateAdapterPosition(positionForSection));
+				mListView.setSelection(positionForSection);
 				return true;
 			}
 			break;
@@ -226,7 +226,7 @@ public class IndexScroller {
 					// list to that section
 					mCurrentSection = getSectionByPoint(ev.getY());
 					final int positionForSection = mIndexer.getPositionForSection(mCurrentSection);
-					mListView.setSelection(mListView.translateAdapterPosition(positionForSection));
+					mListView.setSelection(positionForSection);
 				}
 				return true;
 			}
