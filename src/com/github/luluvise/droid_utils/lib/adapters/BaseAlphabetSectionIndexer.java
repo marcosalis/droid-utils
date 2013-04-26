@@ -15,23 +15,28 @@
  */
 package com.github.luluvise.droid_utils.lib.adapters;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.widget.AlphabetIndexer;
 import android.widget.ListAdapter;
 import android.widget.SectionIndexer;
 
 import com.google.common.annotations.Beta;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Delegate implementation of {@link SectionIndexer} that provides alphabetical
@@ -75,11 +80,29 @@ public class BaseAlphabetSectionIndexer<T> extends DataSetObserver implements Se
 		public String getStringForItemSection(@Nonnull T item);
 	}
 
+	public static final String LATIN_DEFAULT_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	private static final ImmutableList<String> DEFAULT_INDEXES;
+
+	static {
+		final ArrayList<String> indexes = new ArrayList<String>(LATIN_DEFAULT_CHARS.length());
+		for (char c : LATIN_DEFAULT_CHARS.toCharArray()) {
+			indexes.add(Character.toString(c));
+		}
+		DEFAULT_INDEXES = ImmutableList.copyOf(indexes);
+	}
+
 	protected final List<T> mDataset;
 	protected final ItemSectionStringBuilder<T> mSectionBuilder;
+	private final boolean mAddDefaultIndexes;
 
 	// sorted set of all existing section strings
-	protected final SortedSet<String> mActiveSections;
+	protected final List<String> mActiveSections;
+
+	// cache for strings/position
+	ArrayListMultimap<String, Integer> mMultimapCache;
+	// cache for position/strings pairs
+	protected SparseArray<String> mStringsCache;
 	// cache for position/section pairs
 	protected final SparseIntArray mSectionsCache;
 	// cache for section/position (start position for a section)
@@ -98,9 +121,28 @@ public class BaseAlphabetSectionIndexer<T> extends DataSetObserver implements Se
 	 */
 	public BaseAlphabetSectionIndexer(@Nonnull List<T> dataset,
 			@Nonnull ItemSectionStringBuilder<T> sectionBuilder) {
+		this(dataset, sectionBuilder, true);
+	}
+
+	/**
+	 * Constructor for a {@link BaseAlphabetSectionIndexer}
+	 * 
+	 * @param dataset
+	 *            The adapter's backing {@link List}. This list is wrapped with
+	 *            {@link Collections#unmodifiableList(List)} and won't be
+	 *            modified by the indexer
+	 * @param sectionBuilder
+	 *            The {@link ItemSectionStringBuilder} to use to build the
+	 *            section string labels
+	 */
+	public BaseAlphabetSectionIndexer(@Nonnull List<T> dataset,
+			@Nonnull ItemSectionStringBuilder<T> sectionBuilder, boolean addDefaultIndexes) {
 		mDataset = Collections.unmodifiableList(dataset);
 		mSectionBuilder = sectionBuilder;
-		mActiveSections = new TreeSet<String>(); // string natural order
+		mAddDefaultIndexes = addDefaultIndexes;
+		mActiveSections = new ArrayList<String>(DEFAULT_INDEXES.size());
+		mMultimapCache = ArrayListMultimap.create();
+		mStringsCache = new SparseArray<String>();
 		mSectionsCache = new SparseIntArray();
 		mPositionsCache = new SparseIntArray();
 		buildCaches();
@@ -127,39 +169,101 @@ public class BaseAlphabetSectionIndexer<T> extends DataSetObserver implements Se
 	}
 
 	@Override
-	public int getPositionForSection(int section) {
-		return mPositionsCache.get(section);
+	public int getPositionForSection(int sectionIndex) {
+		if (sectionIndex <= 0) { // top position
+			return 0;
+		}
+		int position = 0;
+		position = mPositionsCache.get(sectionIndex, -1);
+		if (position != -1) { // cached position
+			return position;
+		} else {
+			String section = mActiveSections.get(sectionIndex);
+			final List<Integer> list = mMultimapCache.get(section);
+			if (!list.isEmpty()) {
+				position = list.get(0).intValue();
+				mSectionsCache.put(position, sectionIndex);
+				mPositionsCache.put(sectionIndex, position);
+				return position;
+			} else { // recursively search for previous existing section
+				return getPositionForSection(sectionIndex - 1);
+			}
+		}
 	}
 
 	@Override
 	public int getSectionForPosition(int position) {
-		return mSectionsCache.get(position, 0);
+		final int size = mDataset.size();
+		if (position < size) {
+			int sectionIndex = mSectionsCache.get(position, -1);
+			if (sectionIndex != -1) {
+				return sectionIndex;
+			} else {
+				String section = mStringsCache.get(position);
+				// TODO: use binary search
+				sectionIndex = mActiveSections.indexOf(section);
+				mSectionsCache.put(position, sectionIndex);
+				mPositionsCache.put(sectionIndex, position);
+				return sectionIndex;
+			}
+		} else {
+			return size - 1;
+		}
 	}
 
 	private final void buildCaches() {
-		// the dataset is already sorted alphabetically, we add add the elements
+		// temporary sorted set by natural string order
+		final TreeSet<String> sections = new TreeSet<String>();
+
+		if (mAddDefaultIndexes) { // add all default indexes
+			sections.addAll(DEFAULT_INDEXES);
+		}
+		// the dataset is already sorted alphabetically, we add the elements
 		// in the sections cache, and only the first item for every section in
 		// the positions cache. We don't need to care about any sorting, if not
 		// of the one of the section strings which is already guaranteed by the
 		// SortedSet
 		int position = 0;
-		int sectionIndex = 0;
+
 		for (T item : mDataset) {
 			final String section = mSectionBuilder.getStringForItemSection(item);
-			if (!mActiveSections.contains(section)) {
-				// first item of a new section, add to caches
-				mActiveSections.add(section);
-				sectionIndex = mActiveSections.size() - 1;
-				mPositionsCache.append(sectionIndex, position);
-			}
-			mSectionsCache.append(position, sectionIndex);
+			mStringsCache.append(position, section);
+			mMultimapCache.put(section, Integer.valueOf(position));
+			sections.add(section);
 			position++;
 		}
+
+		mActiveSections.addAll(sections); // add all sections
+	}
+
+	@Nonnegative
+	static int approxBinarySearch(@Nonnull String section, @Nonnull SortedSet<String> dataSet) {
+		final ArrayList<String> sections = new ArrayList<String>(dataSet);
+
+		int start = 0;
+		int end = sections.size() - 1;
+		int pivot = 0;
+
+		while (start < end) {
+			pivot = (start + end) / 2;
+			final int compare = sections.get(pivot).compareTo(section);
+			if (compare == 0) {
+				return pivot;
+			} else if (compare < 0) {
+				start = pivot + 1;
+			} else {
+				end = pivot - 1;
+			}
+		}
+
+		return start; // return lower element
 	}
 
 	@OverridingMethodsMustInvokeSuper
 	protected void clear() {
 		mActiveSections.clear();
+		mMultimapCache.clear();
+		mStringsCache.clear();
 		mSectionsCache.clear();
 		mPositionsCache.clear();
 	}
