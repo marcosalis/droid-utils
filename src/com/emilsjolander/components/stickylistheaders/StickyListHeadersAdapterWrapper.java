@@ -18,8 +18,8 @@ package com.emilsjolander.components.stickylistheaders;
 import java.util.WeakHashMap;
 
 import android.content.Context;
-import android.database.DataSetObserver;
 import android.database.DataSetObservable;
+import android.database.DataSetObserver;
 import android.graphics.drawable.Drawable;
 import android.util.SparseIntArray;
 import android.view.View;
