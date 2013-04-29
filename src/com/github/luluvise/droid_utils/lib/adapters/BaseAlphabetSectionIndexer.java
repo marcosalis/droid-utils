@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeSet;
 
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -226,6 +225,9 @@ public class BaseAlphabetSectionIndexer<T> extends DataSetObserver implements Se
 			String section = mStringsCache.get(position);
 			// use binary search to find and cache section index
 			sectionIndex = approxBinarySearch(mActiveSections, section);
+			if (sectionIndex < 0) {
+				return 0; // out of bounds - error??
+			}
 			mSectionsCache.put(position, sectionIndex);
 			mPositionsCache.put(sectionIndex, position);
 			return sectionIndex;
@@ -279,7 +281,6 @@ public class BaseAlphabetSectionIndexer<T> extends DataSetObserver implements Se
 	 * @return The index of the element if found, or the index of the closest
 	 *         lower element if not. Returns -1 if the passed list is empty
 	 */
-	@Nonnegative
 	protected static <T extends Comparable<T>> int approxBinarySearch(@Nonnull List<T> dataset,
 			@Nonnull T section) {
 		final int size = dataset.size();
