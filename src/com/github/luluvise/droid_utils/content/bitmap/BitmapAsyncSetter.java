@@ -70,9 +70,9 @@ public class BitmapAsyncSetter {
 	}
 
 	/**
-	 * Low-level debug mode for bitmap debugging.
+	 * Low-level debug mode for bitmap debugging (disabled by default).
 	 */
-	protected static final boolean BITMAP_DEBUG = DroidConfig.DEBUG && true;
+	protected static final boolean BITMAP_DEBUG = DroidConfig.DEBUG && false;
 
 	private static final String TAG = BitmapAsyncSetter.class.getSimpleName();
 
