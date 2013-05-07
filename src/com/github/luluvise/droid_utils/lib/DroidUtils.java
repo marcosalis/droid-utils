@@ -31,7 +31,6 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -262,7 +261,8 @@ public class DroidUtils {
 	 *         {@link PhoneNumberUtils#isWellFormedSmsAddress(String)}. In the
 	 *         latter case, the SMS composer is shown anyway with no recipients.
 	 */
-	public static boolean sendSms(Context context, String number, String text) {
+	public static boolean sendSms(@Nonnull Context context, @CheckForNull String number,
+			@Nullable String text) {
 		boolean success = true;
 		if (hasTelephony(context)) {
 			if (number == null || !PhoneNumberUtils.isWellFormedSmsAddress(number)) {
@@ -288,7 +288,8 @@ public class DroidUtils {
 	 * As {@link #sendSms(Context, String, String)} but allows to use multiple
 	 * recipients for the SMS message.
 	 */
-	public static boolean sendSmsToMany(Context context, String[] numbers, String text) {
+	public static boolean sendSmsToMany(@Nonnull Context context, @Nonnull String[] numbers,
+			@Nullable String text) {
 		if (numbers.length == 1) { // one recipient only, call sendSms()
 			return sendSms(context, numbers[0], text);
 		} // more than one recipient
@@ -327,9 +328,12 @@ public class DroidUtils {
 	 * email, either in plain text or HTML.
 	 * 
 	 * @param email
+	 *            The email address to send the message to
 	 * @param subject
+	 *            The email subject
 	 * @param body
-	 * @return
+	 *            The email body
+	 * @return The {@link Uri} for the intent to send the email
 	 */
 	@Nonnull
 	public static Uri buildEmailUri(String email, String subject, CharSequence body) {
@@ -339,15 +343,14 @@ public class DroidUtils {
 		builder.append("&body=").append(body);
 		String uriText = builder.toString().replace(" ", "%20");
 		return Uri.parse(uriText);
-
 	}
 
 	/**
 	 * Create a chooser intent to open the email composer with the specified
 	 * single email recipient, subject and message.
 	 * 
-	 * @param activity
-	 *            The {@link Activity} to start the chooser intent with
+	 * @param context
+	 *            The {@link Context} to start the chooser intent with
 	 * @param chooserMessage
 	 *            The (optional) message to display in the intent chooser
 	 * @param recipient
@@ -357,17 +360,17 @@ public class DroidUtils {
 	 * @param message
 	 *            The email message
 	 */
-	public static void sendEmail(@Nonnull Activity activity, @Nullable String chooserMessage,
+	public static void sendEmail(@Nonnull Context context, @Nullable String chooserMessage,
 			@Nullable String recipient, @Nullable String subject, @Nullable String message) {
-		sendEmail(activity, chooserMessage, new String[] { recipient }, subject, message);
+		sendEmail(context, chooserMessage, new String[] { recipient }, subject, message);
 	}
 
 	/**
 	 * Create a chooser intent to open the email composer with the specified
 	 * email recipients, subject and message.
 	 * 
-	 * @param activity
-	 *            The {@link Activity} to start the chooser intent with
+	 * @param context
+	 *            The {@link Context} to start the chooser intent with
 	 * @param chooserMessage
 	 *            The (optional) message to display in the intent chooser
 	 * @param recipients
@@ -377,14 +380,14 @@ public class DroidUtils {
 	 * @param message
 	 *            The email message
 	 */
-	public static void sendEmail(@Nonnull Activity activity, @Nullable String chooserMessage,
+	public static void sendEmail(@Nonnull Context context, @Nullable String chooserMessage,
 			@Nonnull String[] recipients, @Nullable String subject, @Nullable String message) {
 		final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
 		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, recipients);
 		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
 		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, message);
 		emailIntent.setType("plain/text");
-		activity.startActivity(Intent.createChooser(emailIntent, chooserMessage));
+		context.startActivity(Intent.createChooser(emailIntent, chooserMessage));
 	}
 
 	/**
