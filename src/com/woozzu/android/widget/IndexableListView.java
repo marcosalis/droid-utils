@@ -51,8 +51,8 @@ import com.google.common.annotations.Beta;
  * Sjölander's {@link StickyListHeadersListView}, also released under APACHE
  * 2.0 license.
  * 
- * @author woozzu
  * @since 1.0
+ * @author woozzu
  */
 @Beta
 public class IndexableListView extends StickyListHeadersListView {

@@ -66,7 +66,7 @@ public class IndexScroller {
 	private static final int PREVIEW_PADDING = 5; // pixels
 
 	private static final int FADE_DELAY = 2000;
-	private static final int INDEX_TEXT_COLOR = Color.BLACK;
+	private static final int INDEX_TEXT_COLOR = Color.DKGRAY;
 	@SuppressWarnings("unused")
 	private static final int INDEX_BG_COLOR = Color.TRANSPARENT;
 
