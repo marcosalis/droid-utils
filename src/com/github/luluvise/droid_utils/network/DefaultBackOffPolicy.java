@@ -17,6 +17,8 @@ package com.github.luluvise.droid_utils.network;
 
 import java.io.IOException;
 
+import javax.annotation.concurrent.Immutable;
+
 import org.apache.http.HttpStatus;
 
 import android.util.Log;
@@ -33,6 +35,7 @@ import com.google.common.annotations.Beta;
  * @author Marco Salis
  */
 @Beta
+@Immutable
 public class DefaultBackOffPolicy implements BackOffPolicy {
 
 	/**
@@ -48,7 +51,7 @@ public class DefaultBackOffPolicy implements BackOffPolicy {
 	@Override
 	public boolean isBackOffRequired(int statusCode) {
 		if (DroidConfig.DEBUG) {
-			Log.v(TAG, "Backoff check required for status code: " + statusCode);
+			Log.v(TAG, "Backoff check requested for status code: " + statusCode);
 		}
 		switch (statusCode) {
 		case 0:
@@ -67,7 +70,7 @@ public class DefaultBackOffPolicy implements BackOffPolicy {
 
 	@Override
 	public void reset() {
-		// does nothing
+		// does nothing, the policy is stateless
 	}
 
 	@Override
