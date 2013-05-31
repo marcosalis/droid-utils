@@ -122,19 +122,17 @@ public class IndexableListView extends StickyListHeadersListView {
 			return true;
 
 		if (mGestureDetector == null) {
-			mGestureDetector = new GestureDetector(getContext(),
-					new GestureDetector.SimpleOnGestureListener() {
+			mGestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
 
-						@Override
-						public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-								float velocityY) {
-							// If fling happens, index bar shows
-							if (mScroller != null)
-								mScroller.show();
-							return super.onFling(e1, e2, velocityX, velocityY);
-						}
+				@Override
+				public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+					// If fling happens, index bar shows
+					if (mScroller != null)
+						mScroller.show();
+					return super.onFling(e1, e2, velocityX, velocityY);
+				}
 
-					});
+			});
 		}
 		mGestureDetector.onTouchEvent(ev);
 

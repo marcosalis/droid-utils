@@ -69,8 +69,7 @@ public abstract class ModelContentProxy<MODEL extends JsonModel> extends Abstrac
 	 *             if an exception occurred while getting the model
 	 */
 	@CheckForNull
-	public abstract MODEL getModel(ActionType action, AbstractModelRequest<MODEL> request)
-			throws Exception;
+	public abstract MODEL getModel(ActionType action, AbstractModelRequest<MODEL> request) throws Exception;
 
 	/**
 	 * Forces a model object to be put into the cache.<br>

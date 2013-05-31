@@ -102,13 +102,12 @@ public class FutureContentLoader<R extends AbstractModelRequest<M>, M extends Js
 	 * @param requestHandler
 	 *            The (optional) {@link RequestHandler} for this loader
 	 */
-	public FutureContentLoader(ActionType action, R request,
-			ModelLruCache<String, ExpiringFutureTask<M>> memCache, ModelDiskCache<M> diskCache,
-			long expiration, ContentUpdateCallback<M> callback, RequestHandler requestHandler) {
+	public FutureContentLoader(ActionType action, R request, ModelLruCache<String, ExpiringFutureTask<M>> memCache,
+			ModelDiskCache<M> diskCache, long expiration, ContentUpdateCallback<M> callback,
+			RequestHandler requestHandler) {
 		// if network is not active, turn every action to CACHE_ONLY
 		final boolean networkActive = CONN_MONITOR.isNetworkActive();
-		mAction = (networkActive) ? ((action != null) ? action : ActionType.NORMAL)
-				: ActionType.CACHE_ONLY;
+		mAction = (networkActive) ? ((action != null) ? action : ActionType.NORMAL) : ActionType.CACHE_ONLY;
 		mRequest = request;
 		mMemCache = memCache;
 		mDiskCache = diskCache;
@@ -151,8 +150,7 @@ public class FutureContentLoader<R extends AbstractModelRequest<M>, M extends Js
 				mMemCache.remove(key, future);
 			}
 
-			final ExpiringFutureTask<M> newFutureTask = new ExpiringFutureTask<M>(
-					new IOContentLoader(), mExpiration);
+			final ExpiringFutureTask<M> newFutureTask = new ExpiringFutureTask<M>(new IOContentLoader(), mExpiration);
 			future = mMemCache.putIfAbsent(key, newFutureTask);
 			if (future == null) {
 				// no tasks inserted in the meantime, execute it

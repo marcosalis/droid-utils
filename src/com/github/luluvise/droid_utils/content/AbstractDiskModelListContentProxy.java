@@ -46,35 +46,28 @@ import com.google.common.annotations.Beta;
  */
 @Beta
 @ThreadSafe
-public abstract class AbstractDiskModelListContentProxy<MODEL extends JsonModel, LIST extends JsonModel>
-		extends AbstractDiskModelContentProxy<MODEL> implements ContentUpdateCallback<LIST> {
+public abstract class AbstractDiskModelListContentProxy<MODEL extends JsonModel, LIST extends JsonModel> extends
+		AbstractDiskModelContentProxy<MODEL> implements ContentUpdateCallback<LIST> {
 
 	private final ListContentProxy mListContentProxy;
 
-	public AbstractDiskModelListContentProxy(
-			@Nonnull Context context,
-			@Nonnull Class<MODEL> modelClass,
-			int modelsInCache,
-			@Nonnull Class<LIST> modelListClass,
-			int listsInCache,
-			@Nonnull String diskFolder,
+	public AbstractDiskModelListContentProxy(@Nonnull Context context, @Nonnull Class<MODEL> modelClass,
+			int modelsInCache, @Nonnull Class<LIST> modelListClass, int listsInCache, @Nonnull String diskFolder,
 			final long expiration,
 			@Nonnull ModelDiskContentLoaderFactory<AbstractModelRequest<MODEL>, MODEL> loaderFactory,
 			@Nonnull ModelDiskContentLoaderFactory<AbstractModelRequest<LIST>, LIST> listLoaderFactory) {
 		super(context, modelClass, modelsInCache, diskFolder, expiration, loaderFactory);
 		final String subFolder = diskFolder + File.separator + "list";
-		mListContentProxy = new ListContentProxy(context, modelListClass, listsInCache, subFolder,
-				expiration, listLoaderFactory);
+		mListContentProxy = new ListContentProxy(context, modelListClass, listsInCache, subFolder, expiration,
+				listLoaderFactory);
 	}
 
-	public AbstractDiskModelListContentProxy(@Nonnull Context context,
-			@Nonnull Class<MODEL> modelClass, int modelsInCache,
-			@Nonnull Class<LIST> modelListClass, int listsInCache, @Nonnull String diskFolder,
+	public AbstractDiskModelListContentProxy(@Nonnull Context context, @Nonnull Class<MODEL> modelClass,
+			int modelsInCache, @Nonnull Class<LIST> modelListClass, int listsInCache, @Nonnull String diskFolder,
 			final long expiration) {
 		super(context, modelClass, modelsInCache, diskFolder, expiration);
 		final String subFolder = diskFolder + File.separator + "list";
-		mListContentProxy = new ListContentProxy(context, modelListClass, listsInCache, subFolder,
-				expiration, null);
+		mListContentProxy = new ListContentProxy(context, modelListClass, listsInCache, subFolder, expiration, null);
 	}
 
 	/**
@@ -88,8 +81,7 @@ public abstract class AbstractDiskModelListContentProxy<MODEL extends JsonModel,
 	 * @throws Exception
 	 */
 	@NotForUIThread
-	public final LIST getModelList(ActionType action, AbstractModelRequest<LIST> request)
-			throws Exception {
+	public final LIST getModelList(ActionType action, AbstractModelRequest<LIST> request) throws Exception {
 		return mListContentProxy.getModel(action, request, this);
 	}
 
@@ -175,9 +167,8 @@ public abstract class AbstractDiskModelListContentProxy<MODEL extends JsonModel,
 	 */
 	private class ListContentProxy extends AbstractDiskModelContentProxy<LIST> {
 
-		public ListContentProxy(Context context, Class<LIST> modelClass, int modelsInCache,
-				String diskFolder, long expiration,
-				ModelDiskContentLoaderFactory<AbstractModelRequest<LIST>, LIST> loaderFactory) {
+		public ListContentProxy(Context context, Class<LIST> modelClass, int modelsInCache, String diskFolder,
+				long expiration, ModelDiskContentLoaderFactory<AbstractModelRequest<LIST>, LIST> loaderFactory) {
 			super(context, modelClass, modelsInCache, diskFolder, expiration, loaderFactory);
 		}
 	}

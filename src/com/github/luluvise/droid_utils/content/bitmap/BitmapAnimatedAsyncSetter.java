@@ -50,8 +50,7 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 		this(imgView, null, -1);
 	}
 
-	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView,
-			@Nullable OnBitmapImageSetListener listener) {
+	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView, @Nullable OnBitmapImageSetListener listener) {
 		this(imgView, listener, -1);
 	}
 
@@ -63,8 +62,8 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 	 *            The ID of a custom animation to load, or -1 to use the default
 	 *            Android fade-in animation.
 	 */
-	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView,
-			@Nullable OnBitmapImageSetListener listener, int customAnimationId) {
+	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView, @Nullable OnBitmapImageSetListener listener,
+			int customAnimationId) {
 		super(imgView, listener);
 		mCustomAnimationId = customAnimationId;
 	}
@@ -99,8 +98,7 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 				}
 			} else { // create new animation
 				int animationId = (mCustomAnimationId != -1) ? mCustomAnimationId : DEFAULT_ANIM_ID;
-				final Animation newAnimation = AnimationUtils.loadAnimation(imageView.getContext(),
-						animationId);
+				final Animation newAnimation = AnimationUtils.loadAnimation(imageView.getContext(), animationId);
 				newAnimation.setFillAfter(true);
 				imageView.startAnimation(newAnimation);
 				if (BITMAP_DEBUG) { // debugging

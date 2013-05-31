@@ -32,7 +32,7 @@ import com.google.common.annotations.Beta;
  */
 @Beta
 public class FlushedInputStream extends FilterInputStream {
-	
+
 	public FlushedInputStream(InputStream inputStream) {
 		super(inputStream);
 	}

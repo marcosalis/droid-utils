@@ -56,8 +56,7 @@ public class SoftKeyEditText extends EditText {
 		// immediately call back to the super class
 		boolean dispatched = super.dispatchKeyEventPreIme(event);
 		// intercept BACK button press
-		if (KeyEvent.KEYCODE_BACK == event.getKeyCode()
-				&& event.getAction() == KeyEvent.ACTION_DOWN) {
+		if (KeyEvent.KEYCODE_BACK == event.getKeyCode() && event.getAction() == KeyEvent.ACTION_DOWN) {
 			// notify callback if existing
 			if (mSoftKeyboardListener != null) {
 				mSoftKeyboardListener.onSoftKeyboardHidden();

@@ -66,10 +66,10 @@ public abstract class BitmapProxy extends AbstractContentProxy {
 		// here we either execute a network request or we wait for it
 		final int dwExecutorSize = DroidUtils.getIOBoundPoolSize();
 
-		BITMAP_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				executorSize, new LoggedThreadFactory("BitmapProxy executor thread")));
-		DOWNLOADER_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				dwExecutorSize, new LoggedThreadFactory("BitmapProxy downloader executor thread")));
+		BITMAP_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(executorSize,
+				new LoggedThreadFactory("BitmapProxy executor thread")));
+		DOWNLOADER_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(dwExecutorSize,
+				new LoggedThreadFactory("BitmapProxy downloader executor thread")));
 		DOWNLOAD_FUTURES = new CacheMemoizer<String, Bitmap>(dwExecutorSize);
 	}
 
@@ -125,9 +125,8 @@ public abstract class BitmapProxy extends AbstractContentProxy {
 	 * @return The {@link Future} that holds the Bitmap loading
 	 */
 	@CheckForNull
-	protected Future<Bitmap> getBitmap(@Nonnull BitmapLruCache<String> cache,
-			@Nullable BitmapDiskCache diskCache, @Nonnull CacheUrlKey url,
-			@Nullable ActionType action, BitmapAsyncSetter callback,
+	protected Future<Bitmap> getBitmap(@Nonnull BitmapLruCache<String> cache, @Nullable BitmapDiskCache diskCache,
+			@Nonnull CacheUrlKey url, @Nullable ActionType action, BitmapAsyncSetter callback,
 			@CheckForNull Drawable placeholder) {
 		final boolean preFetch = (action == ActionType.PRE_FETCH);
 		Bitmap bitmap;
@@ -151,8 +150,7 @@ public abstract class BitmapProxy extends AbstractContentProxy {
 			} else {
 				callback = null; // make sure there's no callback
 			}
-			return BITMAP_EXECUTOR.submit(new BitmapLoader(DOWNLOAD_FUTURES, cache, diskCache, url,
-					callback));
+			return BITMAP_EXECUTOR.submit(new BitmapLoader(DOWNLOAD_FUTURES, cache, diskCache, url, callback));
 		}
 	}
 
@@ -162,8 +160,8 @@ public abstract class BitmapProxy extends AbstractContentProxy {
 	 * with null placeholder.
 	 */
 	@CheckForNull
-	protected Future<Bitmap> getBitmap(BitmapLruCache<String> cache, BitmapDiskCache diskCache,
-			CacheUrlKey url, ActionType action, BitmapAsyncSetter callback) {
+	protected Future<Bitmap> getBitmap(BitmapLruCache<String> cache, BitmapDiskCache diskCache, CacheUrlKey url,
+			ActionType action, BitmapAsyncSetter callback) {
 		return getBitmap(cache, diskCache, url, action, callback, null);
 	}
 

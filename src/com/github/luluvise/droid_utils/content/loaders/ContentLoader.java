@@ -50,8 +50,7 @@ public interface ContentLoader<R extends AbstractModelRequest<M>, M extends Json
 	 * @throws Exception
 	 *             if an exception was thrown during the retrieval.
 	 */
-	public M load(ActionType action, final R request, ContentUpdateCallback<M> callback)
-			throws Exception;
+	public M load(ActionType action, final R request, ContentUpdateCallback<M> callback) throws Exception;
 
 	/**
 	 * Interface for custom handlers that a {@link ContentLoader} uses to

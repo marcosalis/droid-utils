@@ -38,8 +38,7 @@ import android.widget.ListAdapter;
  * 
  * @author Jake Wharton (jakewharton@gmail.com)
  */
-class StickyListHeadersAdapterWrapper extends BaseAdapter implements
-		StickyListHeadersAdapter {
+class StickyListHeadersAdapterWrapper extends BaseAdapter implements StickyListHeadersAdapter {
 
 	static final int VIEW_TYPE_DIVIDER_OFFSET = 1;
 	static final int VIEW_TYPE_HEADER_OFFSET = 0;
@@ -76,8 +75,7 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements
 		};
 	};
 
-	StickyListHeadersAdapterWrapper(Context context,
-			StickyListHeadersAdapter delegate) {
+	StickyListHeadersAdapterWrapper(Context context, StickyListHeadersAdapter delegate) {
 		this.context = context;
 		this.delegate = delegate;
 		delegate.registerDataSetObserver(datasetObserver);
@@ -154,12 +152,10 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements
 				long headerId = delegate.getHeaderId(i);
 				if (lastHeaderId != headerId) {
 					lastHeaderId = headerId;
-					positionMapping.put(i + headerCount + dividerCount,
-							HEADER_POSITION);
+					positionMapping.put(i + headerCount + dividerCount, HEADER_POSITION);
 					headerCount++;
 				} else {
-					positionMapping.put(i + headerCount + dividerCount,
-							DIVIDER_POSITION);
+					positionMapping.put(i + headerCount + dividerCount, DIVIDER_POSITION);
 					dividerCount++;
 				}
 				positionMapping.put(i + headerCount + dividerCount, i);
@@ -232,8 +228,7 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements
 	@Override
 	public int getViewTypeCount() {
 		headerViewType = delegate.getViewTypeCount() + VIEW_TYPE_HEADER_OFFSET;
-		dividerViewType = delegate.getViewTypeCount()
-				+ VIEW_TYPE_DIVIDER_OFFSET;
+		dividerViewType = delegate.getViewTypeCount() + VIEW_TYPE_DIVIDER_OFFSET;
 		return delegate.getViewTypeCount() + EXTRA_VIEW_TYPE_COUNT;
 	}
 
@@ -248,8 +243,7 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements
 
 		if (viewType == headerViewType) {
 			headers.remove(convertView);
-			convertView = delegate.getHeaderView(
-					translateListViewPosition(position), convertView, parent);
+			convertView = delegate.getHeaderView(translateListViewPosition(position), convertView, parent);
 			headers.put(convertView, null);
 		} else if (viewType == dividerViewType) {
 			if (convertView == null) {
@@ -257,8 +251,7 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements
 			}
 			return convertView;
 		} else {
-			convertView = delegate.getView(translateListViewPosition(position),
-					convertView, parent);
+			convertView = delegate.getView(translateListViewPosition(position), convertView, parent);
 		}
 		return convertView;
 	}
@@ -267,8 +260,8 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements
 	private View makeDivider() {
 		View v = new View(context);
 		v.setBackgroundDrawable(divider);
-		AbsListView.LayoutParams params = new AbsListView.LayoutParams(
-				AbsListView.LayoutParams.MATCH_PARENT, dividerHeight);
+		AbsListView.LayoutParams params = new AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT,
+				dividerHeight);
 		v.setLayoutParams(params);
 		return v;
 	}
@@ -284,8 +277,7 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements
 			return null;
 		}
 		position = translateListViewPosition(position);
-		return ((BaseAdapter) delegate).getDropDownView(position, convertView,
-				parent);
+		return ((BaseAdapter) delegate).getDropDownView(position, convertView, parent);
 	}
 
 	@Override
@@ -310,8 +302,7 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements
 
 	@Override
 	public View getHeaderView(int position, View convertView, ViewGroup parent) {
-		return delegate.getHeaderView(translateListViewPosition(position),
-				convertView, parent);
+		return delegate.getHeaderView(translateListViewPosition(position), convertView, parent);
 	}
 
 	@Override

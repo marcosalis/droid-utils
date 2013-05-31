@@ -63,8 +63,7 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	private static final byte[] CR_LF = "\r\n".getBytes();
 	private static final byte[] CONTENT_DISP = "Content-Disposition: ".getBytes();
 	private static final byte[] CONTENT_TYPE = "Content-Type: ".getBytes();
-	private static final byte[] CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding: binary"
-			.getBytes();
+	private static final byte[] CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding: binary".getBytes();
 	private static final byte[] TWO_DASHES = "--".getBytes();
 	private static final String BOUNDARY_STRING = "0xKhTmLbOuNdArY";
 	private static final byte[] BOUNDARY = BOUNDARY_STRING.getBytes();

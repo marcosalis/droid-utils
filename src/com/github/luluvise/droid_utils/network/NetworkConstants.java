@@ -68,8 +68,7 @@ public class NetworkConstants {
 	 * @return The keep alive time or -1 if not found
 	 */
 	public static long getKeepAliveHeader(HttpResponse response) {
-		HeaderElementIterator it = new BasicHeaderElementIterator(
-				response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+		HeaderElementIterator it = new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
 		while (it.hasNext()) {
 			HeaderElement he = it.nextElement();
 			String param = he.getName();

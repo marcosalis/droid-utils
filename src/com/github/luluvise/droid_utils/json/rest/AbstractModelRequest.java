@@ -92,9 +92,8 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 		final int KEEP_ALIVE = 1;
 		final BlockingQueue<Runnable> poolWorkQueue = new LinkedBlockingQueue<Runnable>(10);
 
-		REQUESTS_EXECUTOR = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(
-				CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE, TimeUnit.SECONDS, poolWorkQueue,
-				Executors.defaultThreadFactory()));
+		REQUESTS_EXECUTOR = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(CORE_POOL_SIZE,
+				MAXIMUM_POOL_SIZE, KEEP_ALIVE, TimeUnit.SECONDS, poolWorkQueue, Executors.defaultThreadFactory()));
 	}
 
 	protected static final ExecutorService REQUESTS_EXECUTOR;
@@ -265,8 +264,7 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 	protected abstract void configRequest(@Nonnull HttpRequest request);
 
 	@CheckForNull
-	protected abstract E parseResponse(HttpResponse response) throws IOException,
-			IllegalArgumentException;
+	protected abstract E parseResponse(HttpResponse response) throws IOException, IllegalArgumentException;
 
 	/**
 	 * Returns the concrete request class logging TAG. Override this to provide

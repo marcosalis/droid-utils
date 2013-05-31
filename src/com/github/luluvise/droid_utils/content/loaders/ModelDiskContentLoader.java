@@ -68,8 +68,7 @@ import com.google.common.annotations.Beta;
  */
 @Beta
 @ThreadSafe
-public final class ModelDiskContentLoader<M extends JsonModel> implements
-		ContentLoader<AbstractModelRequest<M>, M> {
+public final class ModelDiskContentLoader<M extends JsonModel> implements ContentLoader<AbstractModelRequest<M>, M> {
 
 	private static final String TAG = ModelDiskContentLoader.class.getSimpleName();
 
@@ -99,8 +98,7 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 	 *            loader
 	 */
 	public ModelDiskContentLoader(@Nonnull ModelLruCache<String, ExpiringFutureTask<M>> memCache,
-			@CheckForNull ModelDiskCache<M> diskCache, long expiration,
-			@Nullable RequestHandler requestHandler,
+			@CheckForNull ModelDiskCache<M> diskCache, long expiration, @Nullable RequestHandler requestHandler,
 			@Nullable ConnectionMonitorInterface connMonitor) {
 		mMemCache = memCache;
 		mDiskCache = diskCache;
@@ -114,14 +112,13 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 	 *      ContentUpdateCallback)
 	 */
 	@Override
-	public M load(ActionType action, AbstractModelRequest<M> request,
-			ContentUpdateCallback<M> callback) throws Exception {
+	public M load(ActionType action, AbstractModelRequest<M> request, ContentUpdateCallback<M> callback)
+			throws Exception {
 		// TODO: improve this, it's almost procedural
 
 		// if network is not active, turn every action to CACHE_ONLY
 		boolean networkActive = (mConnMonitor != null) ? mConnMonitor.isNetworkActive() : true;
-		action = (networkActive) ? ((action != null) ? action : ActionType.NORMAL)
-				: ActionType.CACHE_ONLY;
+		action = (networkActive) ? ((action != null) ? action : ActionType.NORMAL) : ActionType.CACHE_ONLY;
 
 		final String key = request.hash();
 		// we try to retrieve item from our task cache
@@ -132,8 +129,7 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 		 * action is REFRESH or the previous is expired and this is not a
 		 * CACHE_ONLY action.
 		 */
-		final boolean isExpired = future != null && future.isExpired()
-				&& action != ActionType.CACHE_ONLY;
+		final boolean isExpired = future != null && future.isExpired() && action != ActionType.CACHE_ONLY;
 
 		if (future == null || action == ActionType.REFRESH || isExpired) {
 
@@ -151,8 +147,8 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 			/** cache debugging - END */
 
 			// build the new loading task
-			final ExpiringFutureTask<M> newFutureTask = new ExpiringFutureTask<M>(
-					new IOContentLoader(action, request, callback), mExpiration);
+			final ExpiringFutureTask<M> newFutureTask = new ExpiringFutureTask<M>(new IOContentLoader(action, request,
+					callback), mExpiration);
 
 			if (action == ActionType.REFRESH || isExpired) {
 				// invalidate cache item if any to start new task
@@ -199,8 +195,8 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 	 *            true to synchronously put the old model in the cache again if
 	 *            no other new tasks have been added, false otherwise
 	 */
-	private void revertOnFailure(String key, ExpiringFutureTask<M> oldTask,
-			ExpiringFutureTask<M> newTask, boolean putOld) {
+	private void revertOnFailure(String key, ExpiringFutureTask<M> oldTask, ExpiringFutureTask<M> newTask,
+			boolean putOld) {
 		mMemCache.remove(key, newTask);
 		if (oldTask != null && putOld) {
 			mMemCache.putIfAbsent(key, oldTask);
@@ -217,8 +213,7 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 		@Nullable
 		private final ContentUpdateCallback<M> mUpdateCallback;
 
-		public IOContentLoader(ActionType action, AbstractModelRequest<M> request,
-				ContentUpdateCallback<M> callback) {
+		public IOContentLoader(ActionType action, AbstractModelRequest<M> request, ContentUpdateCallback<M> callback) {
 			mAction = action;
 			mRequest = request;
 			mUpdateCallback = callback;

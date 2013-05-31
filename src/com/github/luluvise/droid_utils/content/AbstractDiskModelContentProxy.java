@@ -55,8 +55,7 @@ import com.google.common.annotations.Beta;
  */
 @Beta
 @ThreadSafe
-public abstract class AbstractDiskModelContentProxy<MODEL extends JsonModel> extends
-		ModelContentProxy<MODEL> {
+public abstract class AbstractDiskModelContentProxy<MODEL extends JsonModel> extends ModelContentProxy<MODEL> {
 
 	private static final String TAG = AbstractDiskModelContentProxy.class.getSimpleName();
 
@@ -78,9 +77,8 @@ public abstract class AbstractDiskModelContentProxy<MODEL extends JsonModel> ext
 	 * @param loaderFactory
 	 *            An (optional) custom {@link ModelDiskContentLoaderFactory}
 	 */
-	public AbstractDiskModelContentProxy(@Nonnull Context context,
-			@Nonnull Class<MODEL> modelClass, int modelsInCache, @Nonnull String diskFolder,
-			long expiration,
+	public AbstractDiskModelContentProxy(@Nonnull Context context, @Nonnull Class<MODEL> modelClass, int modelsInCache,
+			@Nonnull String diskFolder, long expiration,
 			ModelDiskContentLoaderFactory<AbstractModelRequest<MODEL>, MODEL> loaderFactory) {
 		// initialize memory LRU caches
 		mModelCache = new ModelLruCache<String, ExpiringFutureTask<MODEL>>(modelsInCache);
@@ -93,8 +91,7 @@ public abstract class AbstractDiskModelContentProxy<MODEL extends JsonModel> ext
 		if (loaderFactory != null) {
 			mContentLoader = loaderFactory.getContentLoader(mModelCache, mModelDisk);
 		} else {
-			mContentLoader = new ModelDiskContentLoader<MODEL>(mModelCache, mModelDisk, expiration,
-					null, null);
+			mContentLoader = new ModelDiskContentLoader<MODEL>(mModelCache, mModelDisk, expiration, null, null);
 		}
 		mExpiration = expiration;
 	}
@@ -103,9 +100,8 @@ public abstract class AbstractDiskModelContentProxy<MODEL extends JsonModel> ext
 	 * @see {@link #AbstractDiskModelContentProxy(Context, Class, int, String, long, ModelDiskContentLoaderFactory)}
 	 *      with default content loader factory.
 	 */
-	public AbstractDiskModelContentProxy(@Nonnull Context context,
-			@Nonnull Class<MODEL> modelClass, int modelsInCache, @Nonnull String diskFolder,
-			long expiration) {
+	public AbstractDiskModelContentProxy(@Nonnull Context context, @Nonnull Class<MODEL> modelClass, int modelsInCache,
+			@Nonnull String diskFolder, long expiration) {
 		this(context, modelClass, modelsInCache, diskFolder, expiration, null);
 	}
 
@@ -116,8 +112,8 @@ public abstract class AbstractDiskModelContentProxy<MODEL extends JsonModel> ext
 	@CheckForNull
 	@NotForUIThread
 	@OverridingMethodsMustInvokeSuper
-	public MODEL getModel(ActionType action, AbstractModelRequest<MODEL> request,
-			ContentUpdateCallback<MODEL> callback) throws Exception {
+	public MODEL getModel(ActionType action, AbstractModelRequest<MODEL> request, ContentUpdateCallback<MODEL> callback)
+			throws Exception {
 		return mContentLoader.load(action, request, callback);
 	}
 
@@ -157,13 +153,12 @@ public abstract class AbstractDiskModelContentProxy<MODEL extends JsonModel> ext
 		if (model == null) {
 			return; // fail-safe attitude
 		}
-		final ExpiringFutureTask<MODEL> innerFuture = new ExpiringFutureTask<MODEL>(
-				new Callable<MODEL>() {
-					@Override
-					public MODEL call() throws Exception {
-						return model;
-					}
-				}, mExpiration);
+		final ExpiringFutureTask<MODEL> innerFuture = new ExpiringFutureTask<MODEL>(new Callable<MODEL>() {
+			@Override
+			public MODEL call() throws Exception {
+				return model;
+			}
+		}, mExpiration);
 		/*
 		 * Run the "task" in this thread: it's just getting in return a value we
 		 * already have, in order to be able to store it as a Future we need to

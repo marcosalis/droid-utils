@@ -44,15 +44,14 @@ public abstract class AbstractContentProxy implements ContentProxy {
 		final int executorSize = DroidUtils.getIOBoundPoolSize();
 		final int prefetchSize = (int) Math.ceil((double) executorSize / 2);
 
-		PROXY_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				executorSize, new LoggedThreadFactory("Proxy executor")));
+		PROXY_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(executorSize,
+				new LoggedThreadFactory("Proxy executor")));
 
-		PRE_FETCH_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				prefetchSize, new LoggedThreadFactory("Proxy pre-fetch", Thread.MIN_PRIORITY)));
+		PRE_FETCH_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(prefetchSize,
+				new LoggedThreadFactory("Proxy pre-fetch", Thread.MIN_PRIORITY)));
 
 		LOW_PRIORITY_EXECUTOR = Executors.unconfigurableExecutorService(Executors
-				.newSingleThreadExecutor(new LoggedThreadFactory("Low priority executor",
-						Thread.MIN_PRIORITY)));
+				.newSingleThreadExecutor(new LoggedThreadFactory("Low priority executor", Thread.MIN_PRIORITY)));
 	}
 
 	/**

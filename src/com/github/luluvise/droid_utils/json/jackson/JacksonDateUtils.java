@@ -71,8 +71,8 @@ public class JacksonDateUtils {
 	 */
 	public static class SimpleDateSerializer extends JsonSerializer<Date> {
 		@Override
-		public void serialize(Date value, JsonGenerator jgen, SerializerProvider provider)
-				throws IOException, JsonProcessingException {
+		public void serialize(Date value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
+				JsonProcessingException {
 			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 			String formattedDate = formatter.format(value);
 			jgen.writeString(formattedDate);
@@ -130,8 +130,8 @@ public class JacksonDateUtils {
 		 * @return true if the string appears to be an ISO8601 date
 		 */
 		public static boolean looksLikeISO8601(String dateStr) {
-			if (dateStr.length() >= 5 && Character.isDigit(dateStr.charAt(0))
-					&& Character.isDigit(dateStr.charAt(3)) && dateStr.charAt(4) == '-') {
+			if (dateStr.length() >= 5 && Character.isDigit(dateStr.charAt(0)) && Character.isDigit(dateStr.charAt(3))
+					&& dateStr.charAt(4) == '-') {
 				return true;
 			}
 			return false;

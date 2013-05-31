@@ -44,12 +44,11 @@ import android.widget.SectionIndexer;
  * @author Emil Sjölander
  */
 @SuppressLint("NewApi")
-public class StickyListHeadersListView extends ListView implements
-		OnScrollListener, OnClickListener {
+public class StickyListHeadersListView extends ListView implements OnScrollListener, OnClickListener {
 
 	public interface OnHeaderClickListener {
-		public void onHeaderClick(StickyListHeadersListView l, View header,
-				int itemPosition, long headerId, boolean currentlySticky);
+		public void onHeaderClick(StickyListHeadersListView l, View header, int itemPosition, long headerId,
+				boolean currentlySticky);
 	}
 
 	private OnScrollListener scrollListener;
@@ -89,8 +88,7 @@ public class StickyListHeadersListView extends ListView implements
 	private OnItemLongClickListener onItemLongClickListenerWrapper = new OnItemLongClickListener() {
 
 		@Override
-		public boolean onItemLongClick(AdapterView<?> l, View v, int position,
-				long id) {
+		public boolean onItemLongClick(AdapterView<?> l, View v, int position, long id) {
 			if (onItemLongClickListenerDelegate != null) {
 				return onItemLongClickListenerDelegate.onItemLongClick(l, v,
 						adapter.translateListViewPosition(position), id);
@@ -109,8 +107,7 @@ public class StickyListHeadersListView extends ListView implements
 		this(context, attrs, android.R.attr.listViewStyle);
 	}
 
-	public StickyListHeadersListView(Context context, AttributeSet attrs,
-			int defStyle) {
+	public StickyListHeadersListView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		super.setOnScrollListener(this);
 		// null out divider, dividers are handled by adapter so they look good
@@ -121,12 +118,11 @@ public class StickyListHeadersListView extends ListView implements
 
 		int[] attrsArray = new int[] { android.R.attr.drawSelectorOnTop };
 
-		TypedArray a = context.obtainStyledAttributes(attrs, attrsArray,
-				defStyle, 0);
+		TypedArray a = context.obtainStyledAttributes(attrs, attrsArray, defStyle, 0);
 		drawSelectorOnTop = a.getBoolean(0, false);
 		a.recycle();
-		
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			setMultiChoiceModeListenerWrapper();
 		}
 	}
@@ -142,7 +138,7 @@ public class StickyListHeadersListView extends ListView implements
 
 			int visibility = getVisibility();
 			setVisibility(View.VISIBLE);
-			
+
 			frame = new StickyListHeadersListViewWrapper(getContext());
 			frame.setSelector(getSelector());
 			frame.setDrawSelectorOnTop(drawSelectorOnTop);
@@ -154,11 +150,10 @@ public class StickyListHeadersListView extends ListView implements
 				setPadding(getPaddingLeft(), 0, getPaddingRight(), 0);
 			}
 
-			ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(
-					LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(LayoutParams.MATCH_PARENT,
 					LayoutParams.MATCH_PARENT);
 			setLayoutParams(params);
-			
+
 			frame.addView(this);
 			frame.setBackgroundDrawable(getBackground());
 			super.setBackgroundDrawable(null);
@@ -247,17 +242,16 @@ public class StickyListHeadersListView extends ListView implements
 
 	@Override
 	public void setAdapter(ListAdapter adapter) {
-        if (this.isInEditMode()) {
-            super.setAdapter(adapter);
-            return;
-        }
+		if (this.isInEditMode()) {
+			super.setAdapter(adapter);
+			return;
+		}
 
 		if (!clipToPaddingHasBeenSet) {
 			clippingToPadding = true;
 		}
 		if (adapter != null && !(adapter instanceof StickyListHeadersAdapter)) {
-			throw new IllegalArgumentException(
-					"Adapter must implement StickyListHeadersAdapter");
+			throw new IllegalArgumentException("Adapter must implement StickyListHeadersAdapter");
 		}
 
 		if (this.adapter != null) {
@@ -267,32 +261,31 @@ public class StickyListHeadersListView extends ListView implements
 
 		if (adapter != null) {
 			if (adapter instanceof SectionIndexer) {
-				this.adapter = new StickyListHeadersSectionIndexerAdapterWrapper(
-						getContext(), (StickyListHeadersAdapter) adapter);
+				this.adapter = new StickyListHeadersSectionIndexerAdapterWrapper(getContext(),
+						(StickyListHeadersAdapter) adapter);
 			} else {
-				this.adapter = new StickyListHeadersAdapterWrapper(
-						getContext(), (StickyListHeadersAdapter) adapter);
+				this.adapter = new StickyListHeadersAdapterWrapper(getContext(), (StickyListHeadersAdapter) adapter);
 			}
 			this.adapter.setDivider(divider);
 			this.adapter.setDividerHeight(dividerHeight);
 			this.adapter.registerInternalDataSetObserver(dataSetChangedObserver);
-			
-			setSelectionFromTop(positionToSetWhenAdapterIsReady,offsetToSetWhenAdapterIsReady);
+
+			setSelectionFromTop(positionToSetWhenAdapterIsReady, offsetToSetWhenAdapterIsReady);
 		}
 
 		currentHeaderId = null;
-		if(frame != null){
+		if (frame != null) {
 			frame.removeHeader();
 		}
 		updateHeaderVisibilities();
 		invalidate();
-		
+
 		super.setAdapter(this.adapter);
 	}
-	
+
 	@Override
 	public void setVisibility(int visibility) {
-		if(frame != null){
+		if (frame != null) {
 			frame.setVisibility(visibility);
 		}
 		super.setVisibility(visibility);
@@ -317,8 +310,7 @@ public class StickyListHeadersListView extends ListView implements
 			});
 		}
 		if (!drawingListUnderStickyHeader) {
-			canvas.clipRect(0, Math.max(frame.getHeaderBottomPosition(), 0),
-					canvas.getWidth(), canvas.getHeight());
+			canvas.clipRect(0, Math.max(frame.getHeaderBottomPosition(), 0), canvas.getWidth(), canvas.getHeight());
 		}
 		super.dispatchDraw(canvas);
 	}
@@ -331,11 +323,9 @@ public class StickyListHeadersListView extends ListView implements
 	}
 
 	@Override
-	public void onScroll(AbsListView view, int firstVisibleItem,
-			int visibleItemCount, int totalItemCount) {
+	public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
 		if (scrollListener != null) {
-			scrollListener.onScroll(view, firstVisibleItem, visibleItemCount,
-					totalItemCount);
+			scrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
 		}
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
 			scrollChanged(firstVisibleItem);
@@ -354,8 +344,7 @@ public class StickyListHeadersListView extends ListView implements
 		}
 
 		final int listViewHeaderCount = getHeaderViewsCount();
-		firstVisibleItem = getFixedFirstVisibleItem(firstVisibleItem)
-				- listViewHeaderCount;
+		firstVisibleItem = getFixedFirstVisibleItem(firstVisibleItem) - listViewHeaderCount;
 
 		if (firstVisibleItem < 0 || firstVisibleItem > adapterCount - 1) {
 			if (currentHeaderId != null || dataChanged) {
@@ -372,8 +361,7 @@ public class StickyListHeadersListView extends ListView implements
 		long newHeaderId = adapter.getHeaderId(firstVisibleItem);
 		if (currentHeaderId == null || currentHeaderId != newHeaderId) {
 			headerPosition = firstVisibleItem;
-			View header = adapter.getHeaderView(headerPosition,
-					frame.removeHeader(), frame);
+			View header = adapter.getHeaderView(headerPosition, frame.removeHeader(), frame);
 			header.setOnClickListener(this);
 			frame.setHeader(header);
 			headerHasChanged = true;
@@ -389,8 +377,7 @@ public class StickyListHeadersListView extends ListView implements
 
 			for (int i = 0; i < childCount; i++) {
 				View child = getChildAt(i);
-				boolean childIsFooter = footerViews != null
-						&& footerViews.contains(child);
+				boolean childIsFooter = footerViews != null && footerViews.contains(child);
 
 				int childDistance;
 				if (clippingToPadding) {
@@ -403,9 +390,7 @@ public class StickyListHeadersListView extends ListView implements
 					continue;
 				}
 
-				if (viewToWatch == null
-						|| (!viewToWatchIsFooter && !adapter
-								.isHeader(viewToWatch))
+				if (viewToWatch == null || (!viewToWatchIsFooter && !adapter.isHeader(viewToWatch))
 						|| ((childIsFooter || adapter.isHeader(child)) && childDistance < watchingChildDistance)) {
 					viewToWatch = child;
 					viewToWatchIsFooter = childIsFooter;
@@ -415,24 +400,18 @@ public class StickyListHeadersListView extends ListView implements
 
 			int headerHeight = frame.getHeaderHeight();
 			int headerBottomPosition = 0;
-			if (viewToWatch != null
-					&& (viewToWatchIsFooter || adapter.isHeader(viewToWatch))) {
+			if (viewToWatch != null && (viewToWatchIsFooter || adapter.isHeader(viewToWatch))) {
 
-				if (firstVisibleItem == listViewHeaderCount
-						&& getChildAt(0).getTop() > 0 && !clippingToPadding) {
+				if (firstVisibleItem == listViewHeaderCount && getChildAt(0).getTop() > 0 && !clippingToPadding) {
 					headerBottomPosition = 0;
 				} else {
 					if (clippingToPadding) {
-						headerBottomPosition = Math.min(viewToWatch.getTop(),
-								headerHeight + getPaddingTop());
-						headerBottomPosition = headerBottomPosition < getPaddingTop() ? headerHeight
-								+ getPaddingTop()
+						headerBottomPosition = Math.min(viewToWatch.getTop(), headerHeight + getPaddingTop());
+						headerBottomPosition = headerBottomPosition < getPaddingTop() ? headerHeight + getPaddingTop()
 								: headerBottomPosition;
 					} else {
-						headerBottomPosition = Math.min(viewToWatch.getTop(),
-								headerHeight);
-						headerBottomPosition = headerBottomPosition < 0 ? headerHeight
-								: headerBottomPosition;
+						headerBottomPosition = Math.min(viewToWatch.getTop(), headerHeight);
+						headerBottomPosition = headerBottomPosition < 0 ? headerHeight : headerBottomPosition;
 					}
 				}
 			} else {
@@ -441,8 +420,7 @@ public class StickyListHeadersListView extends ListView implements
 					headerBottomPosition += getPaddingTop();
 				}
 			}
-			if (frame.getHeaderBottomPosition() != headerBottomPosition
-					|| headerHasChanged) {
+			if (frame.getHeaderBottomPosition() != headerBottomPosition || headerHasChanged) {
 				frame.setHeaderBottomPosition(headerBottomPosition);
 			}
 			updateHeaderVisibilities();
@@ -525,8 +503,7 @@ public class StickyListHeadersListView extends ListView implements
 		}
 	}
 
-	public void setOnHeaderClickListener(
-			OnHeaderClickListener onHeaderClickListener) {
+	public void setOnHeaderClickListener(OnHeaderClickListener onHeaderClickListener) {
 		this.onHeaderClickListener = onHeaderClickListener;
 	}
 
@@ -534,8 +511,7 @@ public class StickyListHeadersListView extends ListView implements
 	public void onClick(View v) {
 		if (frame.isHeader(v)) {
 			if (onHeaderClickListener != null) {
-				onHeaderClickListener.onHeaderClick(this, v, headerPosition,
-						currentHeaderId, true);
+				onHeaderClickListener.onHeaderClick(this, v, headerPosition, currentHeaderId, true);
 			}
 		}
 	}
@@ -544,18 +520,17 @@ public class StickyListHeadersListView extends ListView implements
 		return drawingListUnderStickyHeader;
 	}
 
-	public void setDrawingListUnderStickyHeader(
-			boolean drawingListUnderStickyHeader) {
+	public void setDrawingListUnderStickyHeader(boolean drawingListUnderStickyHeader) {
 		this.drawingListUnderStickyHeader = drawingListUnderStickyHeader;
 	}
-	
-	
+
 	/* METHODS THAT NEED POSITION TRANSLATING! */
-	
+
 	// added by Marco Salis - 15.04.2013
 	public int translateAdapterPosition(int position) {
 		return adapter.translateAdapterPosition(position);
 	}
+
 	// end of changed
 
 	private void setMultiChoiceModeListenerWrapper() {
@@ -564,60 +539,53 @@ public class StickyListHeadersListView extends ListView implements
 			@Override
 			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 				if (multiChoiceModeListenerDelegate != null) {
-					return multiChoiceModeListenerDelegate.onPrepareActionMode(
-							mode, menu);
+					return multiChoiceModeListenerDelegate.onPrepareActionMode(mode, menu);
 				}
 				return false;
 			}
-	
+
 			@Override
 			public void onDestroyActionMode(ActionMode mode) {
 				if (multiChoiceModeListenerDelegate != null) {
 					multiChoiceModeListenerDelegate.onDestroyActionMode(mode);
 				}
 			}
-	
+
 			@Override
 			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 				if (multiChoiceModeListenerDelegate != null) {
-					return multiChoiceModeListenerDelegate.onCreateActionMode(mode,
-							menu);
+					return multiChoiceModeListenerDelegate.onCreateActionMode(mode, menu);
 				}
 				return false;
 			}
-	
+
 			@Override
 			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 				if (multiChoiceModeListenerDelegate != null) {
-					return multiChoiceModeListenerDelegate.onActionItemClicked(
-							mode, item);
+					return multiChoiceModeListenerDelegate.onActionItemClicked(mode, item);
 				}
 				return false;
 			}
-	
+
 			@Override
-			public void onItemCheckedStateChanged(ActionMode mode, int position,
-					long id, boolean checked) {
+			public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
 				if (multiChoiceModeListenerDelegate != null) {
 					position = adapter.translateListViewPosition(position);
-					multiChoiceModeListenerDelegate.onItemCheckedStateChanged(mode,
-							position, id, checked);
+					multiChoiceModeListenerDelegate.onItemCheckedStateChanged(mode, position, id, checked);
 				}
 			}
 		};
 	}
+
 	@Override
 	public boolean performItemClick(View view, int position, long id) {
 		OnItemClickListener listener = getOnItemClickListener();
 		int headerViewsCount = getHeaderViewsCount();
-		final int viewType = adapter.getItemViewType(position
-				- headerViewsCount);
+		final int viewType = adapter.getItemViewType(position - headerViewsCount);
 		if (viewType == adapter.headerViewType) {
 			if (onHeaderClickListener != null) {
-				position = adapter.translateListViewPosition(position
-						- headerViewsCount);
-				onHeaderClickListener.onHeaderClick(this, view, position, id,
-						false);
+				position = adapter.translateListViewPosition(position - headerViewsCount);
+				onHeaderClickListener.onHeaderClick(this, view, position, id, false);
 				return true;
 			}
 			return false;
@@ -628,9 +596,7 @@ public class StickyListHeadersListView extends ListView implements
 				if (position >= adapter.getCount()) {
 					position -= adapter.getHeaderCount();
 				} else if (!(position < headerViewsCount)) {
-					position = adapter.translateListViewPosition(position
-							- headerViewsCount)
-							+ headerViewsCount;
+					position = adapter.translateListViewPosition(position - headerViewsCount) + headerViewsCount;
 				}
 				listener.onItemClick(this, view, position, id);
 				return true;
@@ -651,24 +617,22 @@ public class StickyListHeadersListView extends ListView implements
 
 	@Override
 	public Object getItemAtPosition(int position) {
-		if(isCalledFromSuper()){
+		if (isCalledFromSuper()) {
 			return super.getItemAtPosition(position);
-		}else{
-			return (adapter == null || position < 0) ? null : adapter.delegate
-					.getItem(position);
+		} else {
+			return (adapter == null || position < 0) ? null : adapter.delegate.getItem(position);
 		}
 	}
 
 	@Override
 	public long getItemIdAtPosition(int position) {
-		if(isCalledFromSuper()){
+		if (isCalledFromSuper()) {
 			return super.getItemIdAtPosition(position);
-		}else{
-			return (adapter == null || position < 0) ? ListView.INVALID_ROW_ID
-					: adapter.delegate.getItemId(position);
+		} else {
+			return (adapter == null || position < 0) ? ListView.INVALID_ROW_ID : adapter.delegate.getItemId(position);
 		}
 	}
-	
+
 	@Override
 	protected ContextMenuInfo getContextMenuInfo() {
 		AdapterContextMenuInfo info = (android.widget.AdapterView.AdapterContextMenuInfo) super.getContextMenuInfo();
@@ -679,12 +643,12 @@ public class StickyListHeadersListView extends ListView implements
 
 	private boolean isCalledFromSuper() {
 		// i feel dirty...
-	    // could not think if better way, need to translate positions when not
-	    // called from super
-	    StackTraceElement callingFrame = Thread.currentThread().getStackTrace()[5];
-	    return callingFrame.getClassName().contains("android.widget.AbsListView") || 
-	           callingFrame.getClassName().contains("android.widget.ListView") ||
-	           callingFrame.getClassName().contains("android.widget.FastScroller");
+		// could not think if better way, need to translate positions when not
+		// called from super
+		StackTraceElement callingFrame = Thread.currentThread().getStackTrace()[5];
+		return callingFrame.getClassName().contains("android.widget.AbsListView")
+				|| callingFrame.getClassName().contains("android.widget.ListView")
+				|| callingFrame.getClassName().contains("android.widget.FastScroller");
 	}
 
 	@Override
@@ -694,8 +658,7 @@ public class StickyListHeadersListView extends ListView implements
 		}
 		// only real items are checkable
 		int viewtype = adapter.getItemViewType(position);
-		if (viewtype != adapter.dividerViewType
-				&& viewtype != adapter.headerViewType) {
+		if (viewtype != adapter.dividerViewType && viewtype != adapter.headerViewType) {
 			super.setItemChecked(position, value);
 		}
 	}
@@ -711,7 +674,7 @@ public class StickyListHeadersListView extends ListView implements
 	@Override
 	public void setSelectionFromTop(int position, int offset) {
 		if (!isCalledFromSuper()) {
-			if(adapter == null){
+			if (adapter == null) {
 				positionToSetWhenAdapterIsReady = position;
 				offsetToSetWhenAdapterIsReady = offset;
 				return;
@@ -725,33 +688,32 @@ public class StickyListHeadersListView extends ListView implements
 		}
 		super.setSelectionFromTop(position, offset);
 	}
-	
+
 	@Override
 	public void setSelection(int position) {
 		setSelectionFromTop(position, 0);
 	}
-	
+
 	@Override
 	public void smoothScrollToPosition(int position) {
 		smoothScrollToPositionFromTop(position, 0);
 	}
-	
+
 	@Override
 	public void smoothScrollToPosition(int position, int boundPosition) {
-		//skipping bound position for now as is does not allow an offset
+		// skipping bound position for now as is does not allow an offset
 		smoothScrollToPositionFromTop(position, 0);
 	}
-	
+
 	@Override
 	public void smoothScrollToPositionFromTop(int position, int offset) {
 		smoothScrollToPositionFromTop(position, offset, 500);
 	}
-	
+
 	@Override
-	public void smoothScrollToPositionFromTop(int position, int offset,
-			int duration) {
+	public void smoothScrollToPositionFromTop(int position, int offset, int duration) {
 		if (!isCalledFromSuper()) {
-			if(adapter == null){
+			if (adapter == null) {
 				positionToSetWhenAdapterIsReady = position;
 				offsetToSetWhenAdapterIsReady = offset;
 				return;
@@ -765,7 +727,7 @@ public class StickyListHeadersListView extends ListView implements
 		}
 		super.smoothScrollToPositionFromTop(position, offset, duration);
 	}
-	
+
 	@Override
 	public int getFirstVisiblePosition() {
 		if (adapter != null && !isCalledFromSuper()) {
@@ -773,7 +735,7 @@ public class StickyListHeadersListView extends ListView implements
 		}
 		return super.getFirstVisiblePosition();
 	}
-	
+
 	@Override
 	public int getLastVisiblePosition() {
 		if (adapter != null && !isCalledFromSuper()) {
@@ -796,7 +758,7 @@ public class StickyListHeadersListView extends ListView implements
 		SparseBooleanArray superCheckeditems = super.getCheckedItemPositions();
 		if (adapter != null && !isCalledFromSuper() && superCheckeditems != null) {
 			SparseBooleanArray checkeditems = new SparseBooleanArray(superCheckeditems.size());
-			for(int i = 0 ; i<superCheckeditems.size() ; i++){
+			for (int i = 0; i < superCheckeditems.size(); i++) {
 				int key = adapter.translateListViewPosition(superCheckeditems.keyAt(i));
 				boolean value = superCheckeditems.valueAt(i);
 				checkeditems.put(key, value);
@@ -815,6 +777,5 @@ public class StickyListHeadersListView extends ListView implements
 			super.setMultiChoiceModeListener(multiChoiceModeListenerWrapper);
 		}
 	}
-	
 
 }

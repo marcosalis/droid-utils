@@ -145,8 +145,7 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public HttpRequest buildRequest(String method, String urlString, HttpContent content)
-			throws IOException {
+	public HttpRequest buildRequest(String method, String urlString, HttpContent content) throws IOException {
 		return mDefaultRequestFactory.buildRequest(method, new GenericUrl(urlString), content);
 	}
 
@@ -166,8 +165,7 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	 * @throws UnsupportedOperationException
 	 */
 	@Override
-	public HttpRequest buildCustomRequest(String method, String urlString, HttpContent content)
-			throws IOException {
+	public HttpRequest buildCustomRequest(String method, String urlString, HttpContent content) throws IOException {
 		throw new UnsupportedOperationException();
 	}
 

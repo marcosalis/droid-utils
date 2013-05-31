@@ -61,8 +61,7 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 				showSelector = false;
 				invalidate(getRefreshedSelectorBounds());
 			}
-			boolean isScrolling = Math.abs(startY - event.getY()) > viewConfig
-					.getScaledTouchSlop();
+			boolean isScrolling = Math.abs(startY - event.getY()) > viewConfig.getScaledTouchSlop();
 			if (isScrolling) {
 				showSelector = false;
 				invalidate(getRefreshedSelectorBounds());
@@ -98,12 +97,10 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 		this(context, attrs, 0);
 	}
 
-	public StickyListHeadersListViewWrapper(Context context,
-			AttributeSet attrs, int defStyle) {
+	public StickyListHeadersListViewWrapper(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 
-		this.gestureDetector = !this.isInEditMode() ? new GestureDetector(
-				context, new GestureListener()) : null;
+		this.gestureDetector = !this.isInEditMode() ? new GestureDetector(context, new GestureListener()) : null;
 
 		if (!HONEYCOMB_OR__ABOVE) {
 			try {
@@ -125,15 +122,13 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 			return;
 		}
 		if (this.header != null) {
-			throw new IllegalStateException(
-					"You must first remove the old header first");
+			throw new IllegalStateException("You must first remove the old header first");
 		}
 		this.header = header;
 		if (header != null) {
 			View list = getChildAt(0);
-			LayoutParams params = new LayoutParams(list.getMeasuredWidth()
-					- list.getPaddingLeft() - list.getPaddingRight(),
-					LayoutParams.WRAP_CONTENT);
+			LayoutParams params = new LayoutParams(list.getMeasuredWidth() - list.getPaddingLeft()
+					- list.getPaddingRight(), LayoutParams.WRAP_CONTENT);
 			params.leftMargin = list.getPaddingLeft();
 			params.rightMargin = list.getPaddingRight();
 			params.gravity = Gravity.TOP;
@@ -150,8 +145,7 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 	}
 
 	@Override
-	protected void onLayout(boolean changed, int left, int top, int right,
-			int bottom) {
+	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
 		inLayout = true;
 		super.onLayout(changed, left, top, right, bottom);
 		setHeaderBottomPosition(this.headerBottomPosition);
@@ -184,15 +178,10 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 		if (header == null) {
 			return 0;
 		}
-		MarginLayoutParams params = (MarginLayoutParams) header
-				.getLayoutParams();
-		int width = getMeasuredWidth()
-				- (params == null ? 0
-						: (params.leftMargin + params.rightMargin));
-		int parentWidthMeasureSpec = MeasureSpec.makeMeasureSpec(width,
-				MeasureSpec.EXACTLY);
-		int parentHeightMeasureSpec = MeasureSpec.makeMeasureSpec(getHeight(),
-				MeasureSpec.EXACTLY);
+		MarginLayoutParams params = (MarginLayoutParams) header.getLayoutParams();
+		int width = getMeasuredWidth() - (params == null ? 0 : (params.leftMargin + params.rightMargin));
+		int parentWidthMeasureSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
+		int parentHeightMeasureSpec = MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY);
 		measureChild(header, parentWidthMeasureSpec, parentHeightMeasureSpec);
 		return header.getMeasuredHeight();
 	}
@@ -201,12 +190,10 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 	void setHeaderBottomPosition(int headerBottomPosition) {
 		if (header != null) {
 			if (HONEYCOMB_OR__ABOVE) {
-				header.setTranslationY(headerBottomPosition
-						- header.getMeasuredHeight());
+				header.setTranslationY(headerBottomPosition - header.getMeasuredHeight());
 			} else {
 				try {
-					mTop.set(header,
-							headerBottomPosition - header.getMeasuredHeight());
+					mTop.set(header, headerBottomPosition - header.getMeasuredHeight());
 					mBottom.set(header, headerBottomPosition);
 				} catch (IllegalArgumentException e) {
 					e.printStackTrace();
@@ -257,15 +244,13 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 		this.drawSelectorOnTop = onTop;
 	}
 
-	private class GestureListener extends
-			GestureDetector.SimpleOnGestureListener {
+	private class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
 		@Override
 		public void onShowPress(final MotionEvent e) {
 			StickyListHeadersListViewWrapper.this.showSelector = true;
-			StickyListHeadersListViewWrapper.this
-					.invalidate(StickyListHeadersListViewWrapper.this
-							.getRefreshedSelectorBounds());
+			StickyListHeadersListViewWrapper.this.invalidate(StickyListHeadersListViewWrapper.this
+					.getRefreshedSelectorBounds());
 		}
 	}
 }

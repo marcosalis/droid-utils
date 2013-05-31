@@ -163,14 +163,12 @@ public class PictureHandler implements Parcelable {
 				Preconditions.checkArgument(mReqWidth != 0 && mReqHeight != 0);
 				String[] cols = BitmapUtils.getImagesMediaColumns();
 				// query content resolver for image data
-				Cursor cursor = activity.getContentResolver().query(data.getData(), cols, null,
-						null, null);
+				Cursor cursor = activity.getContentResolver().query(data.getData(), cols, null, null, null);
 				if (cursor != null) {
 					if (cursor.moveToFirst()) {
 						// we've found the image, load Bitmap
 						String picturePath = cursor.getString(cursor.getColumnIndex(cols[0]));
-						Bitmap image = BitmapUtils.loadBitmapFromPath(picturePath, mReqWidth,
-								mReqHeight);
+						Bitmap image = BitmapUtils.loadBitmapFromPath(picturePath, mReqWidth, mReqHeight);
 						mListener.onPictureRetrieved(image, picturePath);
 					}
 					cursor.close();

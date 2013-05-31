@@ -84,8 +84,8 @@ public abstract class DiskCache<V> implements ContentCache<String, V> {
 	 */
 	public static final long DEFAULT_EXPIRE_IN_SEC = TimeDroidUtils.DAY * 5;
 
-	protected static final ExecutorService PURGE_EXECUTOR = Executors
-			.newSingleThreadExecutor(new LoggedThreadFactory("DiskCache purge executor thread"));
+	protected static final ExecutorService PURGE_EXECUTOR = Executors.newSingleThreadExecutor(new LoggedThreadFactory(
+			"DiskCache purge executor thread"));
 
 	protected final File mCacheLocation;
 
@@ -104,8 +104,8 @@ public abstract class DiskCache<V> implements ContentCache<String, V> {
 	 * @throws IOException
 	 *             if the cache cannot be created
 	 */
-	protected DiskCache(@Nonnull Context context, @Nonnull CacheLocation location,
-			@Nonnull String subFolder, boolean canChange) throws IOException {
+	protected DiskCache(@Nonnull Context context, @Nonnull CacheLocation location, @Nonnull String subFolder,
+			boolean canChange) throws IOException {
 		File cacheRoot = CacheUtils.getAppCacheDir(context, location, true);
 		if (cacheRoot != null) {
 			mCacheLocation = new File(cacheRoot.getAbsolutePath() + File.separator + subFolder);

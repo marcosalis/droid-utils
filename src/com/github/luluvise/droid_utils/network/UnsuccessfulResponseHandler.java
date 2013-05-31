@@ -46,8 +46,7 @@ public class UnsuccessfulResponseHandler implements HttpUnsuccessfulResponseHand
 	public static final UnsuccessfulResponseHandler DEFAULT_HANDLER = new UnsuccessfulResponseHandler();
 
 	@Override
-	public boolean handleResponse(HttpRequest request, HttpResponse response, boolean supportsRetry)
-			throws IOException {
+	public boolean handleResponse(HttpRequest request, HttpResponse response, boolean supportsRetry) throws IOException {
 		switch (response.getStatusCode()) {
 		case 0:
 			return handleZero(request);
@@ -74,8 +73,7 @@ public class UnsuccessfulResponseHandler implements HttpUnsuccessfulResponseHand
 	 */
 	protected static boolean handle502(HttpRequest request) {
 		if (DroidConfig.DEBUG) {
-			Log.w(TAG, "Handle '502 - Bad Gateway' response status code for request "
-					+ request.getUrl().build());
+			Log.w(TAG, "Handle '502 - Bad Gateway' response status code for request " + request.getUrl().build());
 		}
 		return true;
 	}

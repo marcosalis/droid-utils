@@ -170,8 +170,7 @@ public abstract class JsonModel {
 	 * @return The list of models or null if the string could not be parsed
 	 */
 	@CheckForNull
-	public static <E extends JsonModel> List<E> parseListFromString(@CheckForNull String modelJson,
-			Class<E> type) {
+	public static <E extends JsonModel> List<E> parseListFromString(@CheckForNull String modelJson, Class<E> type) {
 		List<E> list = null;
 		if (modelJson != null) {
 			try {
@@ -200,9 +199,8 @@ public abstract class JsonModel {
 	 * @throws JsonParseException
 	 */
 	@CheckForNull
-	public static <E extends JsonModel> List<E> parseListFromStringOrThrow(
-			@CheckForNull String modelJson, Class<E> type) throws JsonParseException,
-			JsonMappingException, IOException {
+	public static <E extends JsonModel> List<E> parseListFromStringOrThrow(@CheckForNull String modelJson, Class<E> type)
+			throws JsonParseException, JsonMappingException, IOException {
 		ArrayList<E> list = null;
 		if (modelJson != null) {
 			list = JSON_MAPPER.readValue(modelJson, new TypeReference<List<E>>() {

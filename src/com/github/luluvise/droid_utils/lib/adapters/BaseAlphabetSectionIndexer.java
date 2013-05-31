@@ -128,8 +128,7 @@ public class BaseAlphabetSectionIndexer<T> extends DataSetObserver implements Se
 	 *            The {@link ItemSectionStringBuilder} to use to build the
 	 *            section string labels
 	 */
-	public BaseAlphabetSectionIndexer(@Nonnull List<T> dataset,
-			@Nonnull ItemSectionStringBuilder<T> sectionBuilder) {
+	public BaseAlphabetSectionIndexer(@Nonnull List<T> dataset, @Nonnull ItemSectionStringBuilder<T> sectionBuilder) {
 		this(dataset, sectionBuilder, true);
 	}
 
@@ -148,8 +147,8 @@ public class BaseAlphabetSectionIndexer<T> extends DataSetObserver implements Se
 	 *            {@link #LATIN_DEFAULT_CHARS} to the index, false to only add
 	 *            chars whose sections have at least one element in the dataset
 	 */
-	public BaseAlphabetSectionIndexer(@Nonnull List<T> dataset,
-			@Nonnull ItemSectionStringBuilder<T> sectionBuilder, boolean addDefaultIndexes) {
+	public BaseAlphabetSectionIndexer(@Nonnull List<T> dataset, @Nonnull ItemSectionStringBuilder<T> sectionBuilder,
+			boolean addDefaultIndexes) {
 		mDataset = Collections.unmodifiableList(dataset);
 		mSectionBuilder = sectionBuilder;
 		mAddDefaultIndexes = addDefaultIndexes;
@@ -281,8 +280,7 @@ public class BaseAlphabetSectionIndexer<T> extends DataSetObserver implements Se
 	 * @return The index of the element if found, or the index of the closest
 	 *         lower element if not. Returns -1 if the passed list is empty
 	 */
-	protected static <T extends Comparable<T>> int approxBinarySearch(@Nonnull List<T> dataset,
-			@Nonnull T section) {
+	protected static <T extends Comparable<T>> int approxBinarySearch(@Nonnull List<T> dataset, @Nonnull T section) {
 		final int size = dataset.size();
 
 		if (size == 0) { // empty list
