@@ -18,8 +18,8 @@ package com.emilsjolander.components.stickylistheaders;
 import android.content.Context;
 import android.widget.SectionIndexer;
 
-public class StickyListHeadersSectionIndexerAdapterWrapper extends StickyListHeadersAdapterWrapper implements
-		SectionIndexer {
+public class StickyListHeadersSectionIndexerAdapterWrapper extends StickyListHeadersAdapterWrapper
+		implements SectionIndexer {
 
 	private final SectionIndexer delegate;
 

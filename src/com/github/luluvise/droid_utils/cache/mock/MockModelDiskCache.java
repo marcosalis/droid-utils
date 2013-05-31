@@ -32,7 +32,8 @@ import com.github.luluvise.droid_utils.json.model.JsonModel;
  */
 public class MockModelDiskCache<V extends JsonModel> extends ModelDiskCache<V> {
 
-	public MockModelDiskCache(Context context, String subFolder, Class<V> modelClass) throws IOException {
+	public MockModelDiskCache(Context context, String subFolder, Class<V> modelClass)
+			throws IOException {
 		super(context, subFolder, modelClass);
 	}
 

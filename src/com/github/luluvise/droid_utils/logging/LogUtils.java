@@ -109,7 +109,9 @@ public class LogUtils {
 	public static void logExceptionMessage(String logTag, String logMessage, Throwable t) {
 		if (DroidConfig.DEBUG) {
 			if (t != null) {
-				Log.w(logTag, logMessage + "\n" + t.getClass().getSimpleName() + " message: " + t.getMessage());
+				Log.w(logTag,
+						logMessage + "\n" + t.getClass().getSimpleName() + " message: "
+								+ t.getMessage());
 			}
 		}
 	}

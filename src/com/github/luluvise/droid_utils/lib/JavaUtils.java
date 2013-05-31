@@ -122,7 +122,8 @@ public class JavaUtils {
 	 * @param escapeForwardSlash
 	 * @return the escaped string
 	 */
-	public static String escapeJavaString(@Nonnull String str, boolean escapeSingleQuotes, boolean escapeForwardSlash) {
+	public static String escapeJavaString(@Nonnull String str, boolean escapeSingleQuotes,
+			boolean escapeForwardSlash) {
 		try {
 			StringWriter writer = new StringWriter(str.length() * 2);
 			escapeJavaString(writer, str, escapeSingleQuotes, escapeForwardSlash);
@@ -147,8 +148,8 @@ public class JavaUtils {
 	 * @throws IOException
 	 *             if an IOException occurs
 	 */
-	private static void escapeJavaString(@Nonnull Writer out, @Nonnull String str, boolean escapeSingleQuote,
-			boolean escapeForwardSlash) throws IOException {
+	private static void escapeJavaString(@Nonnull Writer out, @Nonnull String str,
+			boolean escapeSingleQuote, boolean escapeForwardSlash) throws IOException {
 		int sz;
 		sz = str.length();
 		for (int i = 0; i < sz; i++) {

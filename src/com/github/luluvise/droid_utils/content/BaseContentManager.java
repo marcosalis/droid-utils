@@ -41,7 +41,8 @@ public class BaseContentManager<E> implements ContentManagerInterface<E> {
 	private final ConcurrentMap<E, ContentProxy> mContents;
 
 	public BaseContentManager(int initSize) {
-		mContents = new ConcurrentHashMap<E, ContentProxy>(initSize, 0.75f, DroidUtils.getCpuBoundPoolSize());
+		mContents = new ConcurrentHashMap<E, ContentProxy>(initSize, 0.75f,
+				DroidUtils.getCpuBoundPoolSize());
 	}
 
 	@Override

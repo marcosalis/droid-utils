@@ -105,8 +105,8 @@ class BitmapLoader implements Callable<Bitmap> {
 		 * We delegate the task to another, separated executor to download
 		 * images to avoid blocking delivery of cached images to the UI
 		 */
-		final MemoizerCallable memoizer = new MemoizerCallable(mDownloadsCache, mCache, mDiskCache, mUrl,
-				mBitmapCallback);
+		final MemoizerCallable memoizer = new MemoizerCallable(mDownloadsCache, mCache, mDiskCache,
+				mUrl, mBitmapCallback);
 		BitmapProxy.getDownloaderExecutor().submit(memoizer);
 
 		return null;
@@ -129,8 +129,9 @@ class BitmapLoader implements Callable<Bitmap> {
 		private final CacheUrlKey mUrl;
 		private final BitmapAsyncSetter mBitmapCallback;
 
-		public MemoizerCallable(CacheMemoizer<String, Bitmap> downloads, BitmapLruCache<String> cache,
-				BitmapDiskCache diskCache, CacheUrlKey url, BitmapAsyncSetter callback) {
+		public MemoizerCallable(CacheMemoizer<String, Bitmap> downloads,
+				BitmapLruCache<String> cache, BitmapDiskCache diskCache, CacheUrlKey url,
+				BitmapAsyncSetter callback) {
 			mDownloadsCache = downloads;
 			mCache = cache;
 			mDiskCache = diskCache;
@@ -142,7 +143,8 @@ class BitmapLoader implements Callable<Bitmap> {
 		@CheckForNull
 		public Bitmap call() throws InterruptedException {
 			try {
-				final DownloaderCallable downloader = new DownloaderCallable(mCache, mDiskCache, mUrl, mBitmapCallback);
+				final DownloaderCallable downloader = new DownloaderCallable(mCache, mDiskCache,
+						mUrl, mBitmapCallback);
 				final Bitmap bitmap = mDownloadsCache.execute(mUrl.hash(), downloader);
 				if (mBitmapCallback != null) {
 					mBitmapCallback.onBitmapReceived(mUrl, bitmap, BitmapSource.NETWORK);
@@ -169,8 +171,8 @@ class BitmapLoader implements Callable<Bitmap> {
 		private final CacheUrlKey mKey;
 		private final BitmapAsyncSetter mBitmapCallback;
 
-		public DownloaderCallable(BitmapLruCache<String> cache, BitmapDiskCache diskCache, CacheUrlKey url,
-				BitmapAsyncSetter callback) {
+		public DownloaderCallable(BitmapLruCache<String> cache, BitmapDiskCache diskCache,
+				CacheUrlKey url, BitmapAsyncSetter callback) {
 			mCache = cache;
 			mDiskCache = diskCache;
 			mKey = url;

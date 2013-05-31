@@ -93,7 +93,8 @@ public class URICacheUrlKey implements CacheUrlKey, Parcelable {
 	 *             if the passed URL is not a valid {@link URI} or is not
 	 *             suitable for being converted to a cache key
 	 */
-	protected URICacheUrlKey(@Nonnull String url, @Nonnull String key) throws IllegalArgumentException {
+	protected URICacheUrlKey(@Nonnull String url, @Nonnull String key)
+			throws IllegalArgumentException {
 		mUri = URI.create(url);
 		mKey = key;
 	}

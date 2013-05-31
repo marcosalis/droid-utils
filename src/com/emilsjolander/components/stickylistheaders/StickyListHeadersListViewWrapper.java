@@ -100,7 +100,8 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 	public StickyListHeadersListViewWrapper(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 
-		this.gestureDetector = !this.isInEditMode() ? new GestureDetector(context, new GestureListener()) : null;
+		this.gestureDetector = !this.isInEditMode() ? new GestureDetector(context,
+				new GestureListener()) : null;
 
 		if (!HONEYCOMB_OR__ABOVE) {
 			try {
@@ -179,7 +180,8 @@ public class StickyListHeadersListViewWrapper extends FrameLayout {
 			return 0;
 		}
 		MarginLayoutParams params = (MarginLayoutParams) header.getLayoutParams();
-		int width = getMeasuredWidth() - (params == null ? 0 : (params.leftMargin + params.rightMargin));
+		int width = getMeasuredWidth()
+				- (params == null ? 0 : (params.leftMargin + params.rightMargin));
 		int parentWidthMeasureSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
 		int parentHeightMeasureSpec = MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY);
 		measureChild(header, parentWidthMeasureSpec, parentHeightMeasureSpec);

@@ -81,14 +81,16 @@ public interface HttpConnectionManagerInterface {
 	 * @throws IllegalArgumentException
 	 *             If the passed url has a syntax error
 	 */
-	public HttpRequest buildRequest(String method, String urlString, HttpContent content) throws IOException;
+	public HttpRequest buildRequest(String method, String urlString, HttpContent content)
+			throws IOException;
 
 	/**
 	 * As
 	 * {@link HttpConnectionManagerInterface#buildRequest(String, String, HttpContent)}
 	 * , for server requests that require custom parameters only.
 	 */
-	public HttpRequest buildCustomRequest(String method, String urlString, HttpContent content) throws IOException;
+	public HttpRequest buildCustomRequest(String method, String urlString, HttpContent content)
+			throws IOException;
 
 	/**
 	 * As {@link HttpConnectionManagerInterface#buildRequest(String, String)},

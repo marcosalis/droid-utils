@@ -114,7 +114,8 @@ public class FileUtils {
 
 		String name = file.getName();
 		if (name.equals(""))
-			throw new IllegalArgumentException(String.format("File name part missing in %s", file.toString()));
+			throw new IllegalArgumentException(String.format("File name part missing in %s",
+					file.toString()));
 
 		if (!createDir(new File(file.getParent()))) // directory tree creation
 													// failed

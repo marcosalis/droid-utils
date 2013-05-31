@@ -56,10 +56,11 @@ public class NetworkBroadcastReceiver extends BroadcastReceiver {
 			final NetworkInfo otherNetworkInfo = (NetworkInfo) intent
 					.getParcelableExtra(ConnectivityManager.EXTRA_OTHER_NETWORK_INFO);
 			final String reason = intent.getStringExtra(ConnectivityManager.EXTRA_REASON);
-			final boolean failover = intent.getBooleanExtra(ConnectivityManager.EXTRA_IS_FAILOVER, false);
+			final boolean failover = intent.getBooleanExtra(ConnectivityManager.EXTRA_IS_FAILOVER,
+					false);
 			Log.i(TAG, "onReceive(): " + " otherNetworkInfo = "
-					+ (otherNetworkInfo == null ? "[none]" : otherNetworkInfo) + ", failover=" + failover + ", reason="
-					+ reason);
+					+ (otherNetworkInfo == null ? "[none]" : otherNetworkInfo) + ", failover="
+					+ failover + ", reason=" + reason);
 		}
 
 		// use EXTRA_NO_CONNECTIVITY to check if there is no connection
@@ -68,7 +69,8 @@ public class NetworkBroadcastReceiver extends BroadcastReceiver {
 			return;
 		}
 
-		final ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		final ConnectivityManager cm = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		final NetworkInfo netInfo = cm.getActiveNetworkInfo();
 
 		// send local broadcast to notify all registered receivers

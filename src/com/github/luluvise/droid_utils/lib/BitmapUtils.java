@@ -126,7 +126,8 @@ public class BitmapUtils {
 	 * @param reqHeight
 	 * @return The calculated inSampleSize
 	 */
-	public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+	public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth,
+			int reqHeight) {
 		// Raw height and width of image
 		final int height = options.outHeight;
 		final int width = options.outWidth;
@@ -206,7 +207,8 @@ public class BitmapUtils {
 	 * @return The decoded Bitmap or null if something went wrong
 	 */
 	@CheckForNull
-	public static Bitmap decodeSampledBitmapFromResource(@Nonnull Resources res, int resId, int reqWidth, int reqHeight) {
+	public static Bitmap decodeSampledBitmapFromResource(@Nonnull Resources res, int resId,
+			int reqWidth, int reqHeight) {
 
 		// First decode with inJustDecodeBounds = true to check dimensions
 		final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -221,8 +223,8 @@ public class BitmapUtils {
 		return BitmapFactory.decodeResource(res, resId, options);
 	}
 
-	private static final ImmutableList<String> MEDIA_COLUMNS = ImmutableList.of(MediaStore.Images.Media.DATA,
-			MediaStore.Images.Media.ORIENTATION);
+	private static final ImmutableList<String> MEDIA_COLUMNS = ImmutableList.of(
+			MediaStore.Images.Media.DATA, MediaStore.Images.Media.ORIENTATION);
 
 	/**
 	 * Returns the available columns for the media content provider for images.
@@ -250,7 +252,8 @@ public class BitmapUtils {
 	 * @return The Bitmap, or null if the URI didn't match any resource
 	 */
 	@CheckForNull
-	public static Bitmap loadBitmapFromUri(ContentResolver cr, Uri picUri, int reqWidth, int reqHeight) {
+	public static Bitmap loadBitmapFromUri(ContentResolver cr, Uri picUri, int reqWidth,
+			int reqHeight) {
 		// TODO: handle picture orientation
 		final String[] mediaColumns = getImagesMediaColumns();
 		Cursor cursor = cr.query(picUri, mediaColumns, null, null, null);
@@ -288,7 +291,8 @@ public class BitmapUtils {
 	 * @return The Bitmap, or null if the path wasn't valid
 	 */
 	@CheckForNull
-	public static Bitmap loadBitmapFromPath(String picturePath, int reqWidth, int reqHeight, boolean rotate) {
+	public static Bitmap loadBitmapFromPath(String picturePath, int reqWidth, int reqHeight,
+			boolean rotate) {
 		int rotateValue = 0;
 		if (rotate) { // check for orientation
 			int orientation = getExifOrientation(picturePath);
@@ -327,8 +331,8 @@ public class BitmapUtils {
 				matrix.setRotate(rotateValue);
 				// matrix.postRotate(rotateValue);
 				Bitmap originalBitmap = bitmap;
-				bitmap = Bitmap
-						.createBitmap(originalBitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, false);
+				bitmap = Bitmap.createBitmap(originalBitmap, 0, 0, bitmap.getWidth(),
+						bitmap.getHeight(), matrix, false);
 				originalBitmap.recycle();
 				LogUtils.log(Log.INFO, TAG, "loadBitmapFromPath: recycling bitmap");
 			}
@@ -472,8 +476,8 @@ public class BitmapUtils {
 		} else {
 			Matrix matrix = new Matrix();
 			matrix.setRotate(rotateValue);
-			Bitmap cropped = Bitmap.createBitmap(originalBitmap, cropOffset, vertOffset, squaredSize, squaredSize,
-					matrix, true);
+			Bitmap cropped = Bitmap.createBitmap(originalBitmap, cropOffset, vertOffset,
+					squaredSize, squaredSize, matrix, true);
 			return cropped;
 		}
 	}

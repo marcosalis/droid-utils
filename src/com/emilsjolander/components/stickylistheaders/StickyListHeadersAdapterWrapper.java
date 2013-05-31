@@ -243,7 +243,8 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements StickyListH
 
 		if (viewType == headerViewType) {
 			headers.remove(convertView);
-			convertView = delegate.getHeaderView(translateListViewPosition(position), convertView, parent);
+			convertView = delegate.getHeaderView(translateListViewPosition(position), convertView,
+					parent);
 			headers.put(convertView, null);
 		} else if (viewType == dividerViewType) {
 			if (convertView == null) {
@@ -251,7 +252,8 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements StickyListH
 			}
 			return convertView;
 		} else {
-			convertView = delegate.getView(translateListViewPosition(position), convertView, parent);
+			convertView = delegate
+					.getView(translateListViewPosition(position), convertView, parent);
 		}
 		return convertView;
 	}
@@ -260,8 +262,8 @@ class StickyListHeadersAdapterWrapper extends BaseAdapter implements StickyListH
 	private View makeDivider() {
 		View v = new View(context);
 		v.setBackgroundDrawable(divider);
-		AbsListView.LayoutParams params = new AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT,
-				dividerHeight);
+		AbsListView.LayoutParams params = new AbsListView.LayoutParams(
+				AbsListView.LayoutParams.MATCH_PARENT, dividerHeight);
 		v.setLayoutParams(params);
 		return v;
 	}

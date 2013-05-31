@@ -72,8 +72,8 @@ public class ModelDiskCache<V extends JsonModel> extends DiskCache<V> {
 	 * @throws IOException
 	 *             if the cache cannot be created
 	 */
-	public ModelDiskCache(@Nonnull Context context, @Nonnull String subFolder, @Nonnull Class<V> modelClass)
-			throws IOException {
+	public ModelDiskCache(@Nonnull Context context, @Nonnull String subFolder,
+			@Nonnull Class<V> modelClass) throws IOException {
 		super(context, CacheLocation.INTERNAL, PATH + File.separator + subFolder, true);
 		mModelClass = modelClass;
 		mObjectMapper = JacksonJsonManager.getObjectMapper();

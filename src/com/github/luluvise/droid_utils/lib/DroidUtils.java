@@ -192,12 +192,14 @@ public class DroidUtils {
 	 * @return An alphanumeric (+ hyphens) {@link UUID} string
 	 */
 	@Nonnull
-	public static String getDeviceUniqueIdentificator(@Nonnull Context context, @Nonnull String appId) {
+	public static String getDeviceUniqueIdentificator(@Nonnull Context context,
+			@Nonnull String appId) {
 		String telephonyId = null;
 		String androidId = null;
 
 		if (hasTelephony(context)) {
-			final TelephonyManager telephony = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+			final TelephonyManager telephony = (TelephonyManager) context
+					.getSystemService(Context.TELEPHONY_SERVICE);
 			telephonyId = telephony.getDeviceId();
 		}
 		if (telephonyId == null) {
@@ -217,7 +219,8 @@ public class DroidUtils {
 			androidId = "";
 		}
 
-		UUID deviceUuid = new UUID(androidId.hashCode(), ((long) telephonyId.hashCode() << 32) | appId.hashCode());
+		UUID deviceUuid = new UUID(androidId.hashCode(), ((long) telephonyId.hashCode() << 32)
+				| appId.hashCode());
 
 		return deviceUuid.toString();
 	}
@@ -258,7 +261,8 @@ public class DroidUtils {
 	 *         {@link PhoneNumberUtils#isWellFormedSmsAddress(String)}. In the
 	 *         latter case, the SMS composer is shown anyway with no recipients.
 	 */
-	public static boolean sendSms(@Nonnull Context context, @CheckForNull String number, @Nullable String text) {
+	public static boolean sendSms(@Nonnull Context context, @CheckForNull String number,
+			@Nullable String text) {
 		boolean success = true;
 		if (hasTelephony(context)) {
 			if (number == null || !PhoneNumberUtils.isWellFormedSmsAddress(number)) {
@@ -284,7 +288,8 @@ public class DroidUtils {
 	 * As {@link #sendSms(Context, String, String)} but allows to use multiple
 	 * recipients for the SMS message.
 	 */
-	public static boolean sendSmsToMany(@Nonnull Context context, @Nonnull String[] numbers, @Nullable String text) {
+	public static boolean sendSmsToMany(@Nonnull Context context, @Nonnull String[] numbers,
+			@Nullable String text) {
 		if (numbers.length == 1) { // one recipient only, call sendSms()
 			return sendSms(context, numbers[0], text);
 		} // more than one recipient
@@ -355,8 +360,8 @@ public class DroidUtils {
 	 * @param message
 	 *            The email message
 	 */
-	public static void sendEmail(@Nonnull Context context, @Nullable String chooserMessage, @Nullable String recipient,
-			@Nullable String subject, @Nullable String message) {
+	public static void sendEmail(@Nonnull Context context, @Nullable String chooserMessage,
+			@Nullable String recipient, @Nullable String subject, @Nullable String message) {
 		sendEmail(context, chooserMessage, new String[] { recipient }, subject, message);
 	}
 
@@ -422,7 +427,8 @@ public class DroidUtils {
 	public static boolean isIntentAvailable(@Nonnull Context context, @Nonnull String action) {
 		final PackageManager packageManager = context.getPackageManager();
 		final Intent intent = new Intent(action);
-		List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+		List<ResolveInfo> list = packageManager.queryIntentActivities(intent,
+				PackageManager.MATCH_DEFAULT_ONLY);
 		return list.size() > 0;
 	}
 
@@ -476,7 +482,8 @@ public class DroidUtils {
 	 *         error occurred
 	 * @throws IOException
 	 */
-	public static InputStream getAsset(@Nonnull Context context, @Nonnull String path) throws IOException {
+	public static InputStream getAsset(@Nonnull Context context, @Nonnull String path)
+			throws IOException {
 		AssetManager manager = context.getAssets();
 		return manager.open(path);
 	}

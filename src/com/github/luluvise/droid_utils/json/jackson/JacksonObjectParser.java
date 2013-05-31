@@ -59,7 +59,8 @@ public class JacksonObjectParser implements ObjectParser {
 		mMapper = mapper;
 	}
 
-	public <T> T parseAndClose(InputStream in, Charset charset, Class<T> dataClass) throws IOException {
+	public <T> T parseAndClose(InputStream in, Charset charset, Class<T> dataClass)
+			throws IOException {
 		// encoding is automatically detected by ObjectMapper
 		return (T) mMapper.readValue(in, dataClass);
 	}

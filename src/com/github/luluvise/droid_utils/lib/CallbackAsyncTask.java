@@ -41,7 +41,8 @@ import com.google.common.annotations.Beta;
  * @author Marco Salis
  */
 @Beta
-public abstract class CallbackAsyncTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
+public abstract class CallbackAsyncTask<Params, Progress, Result> extends
+		AsyncTask<Params, Progress, Result> {
 
 	/**
 	 * Indicates whether we are executing the task within a unit test

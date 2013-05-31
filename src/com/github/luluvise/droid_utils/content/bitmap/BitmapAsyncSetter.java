@@ -222,7 +222,8 @@ public class BitmapAsyncSetter {
 	 * @param source
 	 *            The origin {@link BitmapSource} of the bitmap
 	 */
-	protected void setImageBitmap(@Nonnull ImageView imageView, @Nonnull Bitmap bitmap, @Nonnull BitmapSource source) {
+	protected void setImageBitmap(@Nonnull ImageView imageView, @Nonnull Bitmap bitmap,
+			@Nonnull BitmapSource source) {
 		imageView.setImageBitmap(bitmap);
 	}
 

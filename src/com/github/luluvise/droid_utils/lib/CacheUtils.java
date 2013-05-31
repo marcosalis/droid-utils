@@ -109,7 +109,8 @@ public class CacheUtils {
 	 *         not available
 	 */
 	@CheckForNull
-	public static File getAppCacheDir(@Nonnull Context context, @Nonnull CacheLocation location, boolean fallback) {
+	public static File getAppCacheDir(@Nonnull Context context, @Nonnull CacheLocation location,
+			boolean fallback) {
 		File cacheDir = null;
 		switch (location) {
 		case INTERNAL:
