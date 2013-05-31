@@ -23,6 +23,7 @@ import org.apache.http.protocol.HTTP;
 
 import com.github.luluvise.droid_utils.DroidConfig;
 import com.google.api.client.http.BackOffPolicy;
+import com.google.common.annotations.Beta;
 
 /**
  * Simple class holding default constants related to network connections, such
@@ -31,6 +32,7 @@ import com.google.api.client.http.BackOffPolicy;
  * @since 1.0
  * @author Marco Salis
  */
+@Beta
 public class NetworkConstants {
 
 	/**

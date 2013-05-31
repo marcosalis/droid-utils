@@ -97,4 +97,5 @@ public interface HttpConnectionManagerInterface {
 	 * for server requests that require custom parameters only.
 	 */
 	public HttpRequest buildCustomRequest(String method, String urlString) throws IOException;
+
 }
