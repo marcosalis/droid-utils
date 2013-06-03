@@ -739,7 +739,11 @@ public class StickyListHeadersListView extends ListView implements OnScrollListe
 			}
 			position = adapter.translateAdapterPosition(position);
 		}
-		super.smoothScrollToPositionFromTop(position, offset, duration);
+		try {
+			super.smoothScrollToPositionFromTop(position, offset, duration);
+		} catch (NoSuchMethodError e) {
+			// droid_utils: API < 11 TODO: update lib to fix this properly
+		}
 	}
 
 	@Override
