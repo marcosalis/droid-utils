@@ -17,6 +17,7 @@ package com.github.luluvise.droid_utils.cache.keys;
 
 import javax.annotation.Nonnull;
 
+import android.annotation.SuppressLint;
 import android.os.Parcelable;
 
 import com.github.luluvise.droid_utils.lib.HashUtils.CacheKey;
@@ -26,12 +27,13 @@ import com.google.common.annotations.Beta;
  * Interface for objects that hold either a String key and a URL representing
  * the resource (or value), to be used as cache key entries.
  * 
- * Implementations <b>must</b> be {@link Parcelable}
+ * Implementations <b>must</b> implement {@link Parcelable}
  * 
  * @since 1.0
  * @author Marco Salis
  */
 @Beta
+@SuppressLint("ParcelCreator")
 public interface CacheUrlKey extends CacheKey, Parcelable {
 
 	/**

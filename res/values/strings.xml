@@ -1,7 +1,5 @@
 <resources>
 
-    <string name="app_name">DroidMavaUtils</string>
-
     <!-- Time span strings -->
     <string name="time_moment_ago">Just a moment ago</string>
     <string name="time_minute_ago">A minute ago</string>
