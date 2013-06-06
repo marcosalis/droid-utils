@@ -18,11 +18,14 @@ package com.github.luluvise.droid_utils.json.jackson;
 import java.io.IOException;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.github.luluvise.droid_utils.logging.LogUtils;
 import com.google.api.client.util.ObjectParser;
+import com.google.common.annotations.Beta;
 
 /**
  * Singleton class that provides JSON parsing utilities based on the Jackson
@@ -31,11 +34,15 @@ import com.google.api.client.util.ObjectParser;
  * 
  * See {@link http://wiki.fasterxml.com/JacksonHome} for documentation.
  * 
+ * Call {@link #registerGuavaModule()} at application startup to enable the
+ * {@link GuavaModule} for Jackson.
+ * 
  * TODO: do we really need a singleton enum here?
  * 
  * @since 1.0
  * @author Marco Salis
  */
+@Beta
 @Immutable
 public enum JacksonJsonManager {
 	INSTANCE;
@@ -46,8 +53,28 @@ public enum JacksonJsonManager {
 	/**
 	 * Shortcut method to return the JsonManager singleton
 	 */
+	@Nonnull
 	public static JacksonJsonManager get() {
 		return INSTANCE;
+	}
+
+	/**
+	 * Private constructor (only used to initialise the singleton fields)
+	 */
+	private JacksonJsonManager() {
+		// single global shared ObjectMapper instance
+		mMapper = new ObjectMapper();
+		// global setting to write dates in ISO8601 format (not needed for now)
+		// mMapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
+		// false);
+		mObjParser = new JacksonObjectParser(mMapper);
+	}
+
+	/**
+	 * Register {@link GuavaModule} module for Guava data structures
+	 */
+	public static void registerGuavaModule() {
+		INSTANCE.mMapper.registerModule(new GuavaModule());
 	}
 
 	/**
@@ -56,6 +83,7 @@ public enum JacksonJsonManager {
 	 * 
 	 * @return The {@link JacksonObjectParser} parser
 	 */
+	@Nonnull
 	public static JacksonObjectParser getObjectParser() {
 		return INSTANCE.mObjParser;
 	}
@@ -65,6 +93,7 @@ public enum JacksonJsonManager {
 	 * 
 	 * @return The {@link ObjectMapper}
 	 */
+	@Nonnull
 	public static ObjectMapper getObjectMapper() {
 		return INSTANCE.mMapper;
 	}
@@ -77,7 +106,7 @@ public enum JacksonJsonManager {
 	 *            work)
 	 * @return The built {@link JacksonHttpContent}
 	 */
-	public static JacksonHttpContent buildHttpContent(Object source) {
+	public static JacksonHttpContent buildHttpContent(@Nonnull Object source) {
 		return new JacksonHttpContent(source);
 	}
 
@@ -94,24 +123,9 @@ public enum JacksonJsonManager {
 		try {
 			return INSTANCE.mMapper.writeValueAsString(data);
 		} catch (IOException e) {
-			// TODO: print trace here?
-			e.printStackTrace();
+			LogUtils.logException(e);
 			return null;
 		}
-	}
-
-	/**
-	 * Private constructor (only used to initialise the singleton fields)
-	 */
-	private JacksonJsonManager() {
-		// single global shared ObjectMapper instance
-		mMapper = new ObjectMapper();
-		// registering module for Guava data structures
-		mMapper.registerModule(new GuavaModule());
-		// global setting to write dates in ISO8601 format (not needed for now)
-		// mMapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
-		// false);
-		mObjParser = new JacksonObjectParser(mMapper);
 	}
 
 }
