@@ -17,6 +17,7 @@ package com.github.luluvise.droid_utils.lib.app;
 
 import javax.annotation.Nonnull;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
@@ -31,6 +32,7 @@ import android.view.WindowManager;
 import com.github.luluvise.droid_utils.BuildConfig;
 import com.github.luluvise.droid_utils.DroidConfig;
 import com.github.luluvise.droid_utils.lib.DroidUtils;
+import com.github.luluvise.droid_utils.logging.LogUtils;
 import com.google.common.annotations.Beta;
 
 /**
@@ -101,6 +103,21 @@ public class DroidApplication extends Application {
 
 		// loads the default display
 		mDefaultDisplay = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+	}
+
+	@Override
+	public void onLowMemory() {
+		super.onLowMemory();
+
+		LogUtils.log(Log.ERROR, TAG, "onLowMemory()");
+	}
+
+	@Override
+	@TargetApi(14)
+	public void onTrimMemory(int level) {
+		super.onTrimMemory(level);
+
+		LogUtils.log(Log.WARN, TAG, "onTrimMemory() - level: " + level);
 	}
 
 	/**
