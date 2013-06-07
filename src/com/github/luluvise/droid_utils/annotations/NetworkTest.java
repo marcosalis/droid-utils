@@ -22,6 +22,8 @@ import java.lang.annotation.Target;
 
 import android.test.suitebuilder.annotation.LargeTest;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Simple annotation to be used for marking tests which requires a working
  * network connection into the target device and will probably make server
@@ -35,6 +37,7 @@ import android.test.suitebuilder.annotation.LargeTest;
  * @since 1.0
  * @author Marco Salis
  */
+@Beta
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface NetworkTest {

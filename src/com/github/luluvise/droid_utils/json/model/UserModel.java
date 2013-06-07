@@ -34,4 +34,5 @@ public interface UserModel {
 	public String getLastName();
 
 	public String getFullName();
+	
 }

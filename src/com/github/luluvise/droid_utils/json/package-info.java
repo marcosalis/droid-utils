@@ -15,7 +15,7 @@
  */
 
 /**
- * This package contains library-level utilities for parsing and handling JSON objects.
+ * This package contains library-level utilities for parsing and handling JSON objects with Google GSON.
  * 
  * @author Marco Salis
  */

@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.luluvise.droid_utils.json;
 
 /**
- * Helper class that contains static methods to parse JSON objects and arrays.
+ * This package contains a collection of static utility classes for different uses.
  * 
+ * @since 1.0
  * @author Marco Salis
  */
-public class JsonUtils {
-
-	private JsonUtils() {
-		// hidden constructor, no instantiation needed
-	}
-
-}
+package com.github.luluvise.droid_utils.lib;

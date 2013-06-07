@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Stack;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.annotations.Beta;
 
 /**
@@ -42,7 +44,7 @@ public class FileUtils {
 	 *            The directory to remove
 	 * @return True if successful, false otherwise
 	 */
-	public static boolean deleteDirectoryTree(File directory) {
+	public static boolean deleteDirectoryTree(@Nonnull File directory) {
 
 		// if the directory already doesn't exist, we're successful
 		if (!directory.exists()) {
@@ -85,7 +87,7 @@ public class FileUtils {
 	 *            The directory path to create
 	 * @return true if the directory exists after this call, false otherwise
 	 */
-	public static boolean createDir(File directory) {
+	public static boolean createDir(@Nonnull File directory) {
 		if (!directory.exists() || directory.isFile()) {
 			if (directory.isFile()) {
 				directory.delete();
@@ -107,7 +109,7 @@ public class FileUtils {
 	 * @throws IllegalArgumentException
 	 *             if the passed File is a directory
 	 */
-	public static boolean createNewFileAndPath(File file) {
+	public static boolean createNewFileAndPath(@Nonnull File file) {
 
 		if (file.exists()) // the file already exists
 			return false;
@@ -117,8 +119,8 @@ public class FileUtils {
 			throw new IllegalArgumentException(String.format("File name part missing in %s",
 					file.toString()));
 
-		if (!createDir(new File(file.getParent()))) // directory tree creation
-													// failed
+		if (!createDir(new File(file.getParent())))
+			// directory tree creation failed
 			return false;
 
 		try {

@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.luluvise.droid_utils.lib;
+package com.github.luluvise.droid_utils.lib.app;
 
 import java.io.File;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import android.app.Activity;
@@ -28,6 +29,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 
+import com.github.luluvise.droid_utils.lib.BitmapUtils;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
 /**
@@ -37,11 +40,10 @@ import com.google.common.base.Preconditions;
  * Instantiate by passing required width and height of the generated image, a
  * callback to be notified of the result.
  * 
- * TODO: unit tests
- * 
  * @since 1.0
  * @author Marco Salis
  */
+@Beta
 @NotThreadSafe
 public class PictureHandler implements Parcelable {
 
@@ -102,7 +104,7 @@ public class PictureHandler implements Parcelable {
 		mReqHeight = reqHeight;
 	}
 
-	public void setOnPictureRetrievedListener(OnPictureRetrievedListener listener) {
+	public void setOnPictureRetrievedListener(@Nonnull OnPictureRetrievedListener listener) {
 		mListener = listener;
 	}
 
@@ -112,7 +114,7 @@ public class PictureHandler implements Parcelable {
 	 * @param activity
 	 *            The Activity to start the camera application
 	 */
-	public void takeCameraPicture(Activity activity) {
+	public void takeCameraPicture(@Nonnull Activity activity) {
 		File photoPath = BitmapUtils.getPublicPicturesDir(activity);
 		File photo = new File(photoPath, PIC_FILE_PREFIX + System.currentTimeMillis() + ".jpg");
 		mTakenPictureUri = Uri.fromFile(photo);
@@ -127,7 +129,7 @@ public class PictureHandler implements Parcelable {
 	 * @param activity
 	 *            The Activity to start the gallery application
 	 */
-	public void pickGalleryPicture(Activity activity) {
+	public void pickGalleryPicture(@Nonnull Activity activity) {
 		// start gallery to let the user pick a picture
 		Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 		activity.startActivityForResult(i, REQUEST_PICK_PICTURE);
@@ -196,7 +198,6 @@ public class PictureHandler implements Parcelable {
 		 *            The path where the original image is stored
 		 */
 		public void onPictureRetrieved(Bitmap bitmap, String path);
-
 	}
 
 }

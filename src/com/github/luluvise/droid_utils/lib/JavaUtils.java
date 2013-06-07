@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Random;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
 import com.github.luluvise.droid_utils.logging.LogUtils;
@@ -60,7 +61,7 @@ public class JavaUtils {
 	 * @return <code>true</code> if the String starts with the prefix or both
 	 *         <code>null</code>
 	 */
-	public static boolean startsWithIgnoreCase(String str, String prefix) {
+	public static boolean startsWithIgnoreCase(@Nullable String str, @Nullable String prefix) {
 		if (str == null || prefix == null) {
 			return (str == null && prefix == null);
 		}
@@ -79,7 +80,7 @@ public class JavaUtils {
 	 * @return The item at the pseudo-randomly generated index, or null if the
 	 *         array is empty
 	 */
-	public static final <E> E getRandom(E[] array) {
+	public static final <E> E getRandom(@Nonnull E[] array) {
 		if (array.length == 0) { // avoids out of bounds exceptions
 			return null;
 		}
@@ -96,7 +97,7 @@ public class JavaUtils {
 	 * @return The item at the pseudo-randomly generated index, or null if the
 	 *         list is empty
 	 */
-	public static final <E> E getRandom(List<E> list) {
+	public static final <E> E getRandom(@Nonnull List<E> list) {
 		if (list.size() == 0) {
 			return null;
 		}
