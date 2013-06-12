@@ -435,7 +435,11 @@ public class DroidUtils {
 	/**
 	 * Adds the flags {@link Intent#FLAG_ACTIVITY_NEW_TASK} and
 	 * {@link Intent#FLAG_ACTIVITY_CLEAR_TASK} (only available from API 11) to
-	 * the passed intent
+	 * the passed intent.
+	 * 
+	 * From the {@link Intent#FLAG_ACTIVITY_NEW_TASK} docs: <b>This flag can not
+	 * be used when the caller is requesting a result from the activity being
+	 * launched.</b>
 	 * 
 	 * @param intent
 	 *            The {@link Intent} to be modified
