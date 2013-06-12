@@ -298,9 +298,10 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 	@Nonnull
 	public synchronized String hash() {
 		if (mHash == null) { // lazy initialization
-			if (mRequestUrl != null) {
+			final String requestUrl = mRequestUrl; // FindBugs, don't complain
+			if (requestUrl != null) {
 				// TODO: performance benchmark between murmur3_128 and MD5
-				mHash = hashUrl(mRequestUrl);
+				mHash = hashUrl(requestUrl);
 			} else {
 				mHash = String.valueOf(hashCode());
 			}
