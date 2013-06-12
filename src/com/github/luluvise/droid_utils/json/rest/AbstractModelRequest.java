@@ -111,7 +111,10 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 	private static final JacksonObjectParser OBJECT_PARSER = JacksonJsonManager.getObjectParser();
 
 	protected final String mHttpMethod;
-	protected final String mRequestUrl;
+
+	@CheckForNull
+	@GuardedBy("this")
+	private volatile String mRequestUrl;
 
 	/**
 	 * Protected instance variable containing the lazily initialized hash value
@@ -131,11 +134,23 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 	private volatile HttpUnsuccessfulResponseHandler mHttpUnsuccessfulResponseHandler;
 
 	/**
-	 * Constructor to be called by subclasses to pass HTTP method and URL to use
-	 * for the request.
+	 * Constructor for a model request whose request URL is generated
+	 * dinamically. Call {@link #setRequestUrl(String)} to set the URL.
 	 * 
-	 * The request URL must be built in the constructor so that it's immediately
-	 * available and doesn't need to be calculated at any hashCode() call.
+	 * @param httpMethod
+	 *            The HTTP method for the request (must be one of the ones
+	 *            listed in {@link HttpMethods})
+	 * @throws IllegalArgumentException
+	 *             if httpMethod is null
+	 */
+	public AbstractModelRequest(@Nonnull String httpMethod) {
+		Preconditions.checkNotNull(httpMethod);
+		mHttpMethod = httpMethod;
+		mRequestUrl = null;
+	}
+
+	/**
+	 * Constructor to pass HTTP method and URL to use for the request.
 	 * 
 	 * @param httpMethod
 	 *            The HTTP method for the request (must be one of the ones
@@ -150,6 +165,34 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 		Preconditions.checkNotNull(requestUrl);
 		mHttpMethod = httpMethod;
 		mRequestUrl = requestUrl;
+	}
+
+	/**
+	 * Dynamically set the request URL (and invalidate the request's hash value
+	 * if already set).
+	 * 
+	 * Keep in mind that overriding the request URL after a hash key (
+	 * {@link #hash()} value) has been lazily initialized can create caches
+	 * inconsistencies.
+	 * 
+	 * @param requestUrl
+	 *            The request URL string
+	 * @throws IllegalArgumentException
+	 *             if requestUrl is null
+	 */
+	public synchronized final void setRequestUrl(@Nonnull String requestUrl) {
+		Preconditions.checkNotNull(requestUrl);
+		mRequestUrl = requestUrl;
+		mHash = null; // reset hash value
+	}
+
+	/**
+	 * Returns the request's URL. Override this in subclasses if the request URL
+	 * cannot be generated at object instantiation.
+	 */
+	@CheckForNull
+	public synchronized String getRequestUrl() {
+		return mRequestUrl;
 	}
 
 	/**
@@ -176,17 +219,7 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 	}
 
 	/**
-	 * Returns the request's URL. Mainly useful for debugging purposes.
-	 */
-	@Nonnull
-	public final String getRequestUrl() {
-		return mRequestUrl;
-	}
-
-	/**
 	 * Returns the concrete request class HTTP method as per {@link HttpMethods}
-	 * 
-	 * Mainly useful for debugging purposes.
 	 */
 	@Nonnull
 	protected final String getHttpMethod() {
@@ -258,15 +291,19 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 	 * URL request as the only input parameter.
 	 * 
 	 * Subclasses might override this to implement different policies to use for
-	 * key caches.
+	 * cache keys.
 	 * 
 	 * @return The String representation of this hash function
 	 */
 	@Nonnull
 	public synchronized String hash() {
-		// TODO: performance benchmark between murmur3_128 and MD5
 		if (mHash == null) { // lazy initialization
-			mHash = hashUrl(mRequestUrl);
+			if (mRequestUrl != null) {
+				// TODO: performance benchmark between murmur3_128 and MD5
+				mHash = hashUrl(mRequestUrl);
+			} else {
+				mHash = String.valueOf(hashCode());
+			}
 		}
 		return mHash;
 	}
