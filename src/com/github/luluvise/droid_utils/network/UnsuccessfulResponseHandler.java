@@ -17,6 +17,8 @@ package com.github.luluvise.droid_utils.network;
 
 import java.io.IOException;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import org.apache.http.HttpStatus;
 
 import android.util.Log;
@@ -35,6 +37,8 @@ import com.google.common.annotations.Beta;
  * @author Marco Salis
  */
 @Beta
+@Deprecated
+@NotThreadSafe
 public class UnsuccessfulResponseHandler implements HttpUnsuccessfulResponseHandler {
 
 	private static final String TAG = UnsuccessfulResponseHandler.class.getSimpleName();
@@ -57,6 +61,9 @@ public class UnsuccessfulResponseHandler implements HttpUnsuccessfulResponseHand
 		return false;
 	}
 
+	
+	
+	
 	/**
 	 * Attempt to solve random issue with the HTTP library that causes a request
 	 * to fail immediately with a '0' response code, just issue a retry

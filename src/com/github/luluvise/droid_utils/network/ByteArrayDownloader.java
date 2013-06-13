@@ -79,7 +79,6 @@ public final class ByteArrayDownloader implements Callable<byte[]> {
 
 		try {
 			request = HttpConnectionManager.get().buildRequest(HttpMethods.GET, url, null);
-			request.setUnsuccessfulResponseHandler(UnsuccessfulResponseHandler.DEFAULT_HANDLER);
 			response = request.execute();
 
 			if (response.isSuccessStatusCode()) {

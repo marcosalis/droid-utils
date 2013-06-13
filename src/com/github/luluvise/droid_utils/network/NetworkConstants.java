@@ -15,6 +15,8 @@
  */
 package com.github.luluvise.droid_utils.network;
 
+import javax.annotation.concurrent.Immutable;
+
 import org.apache.http.HeaderElement;
 import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpResponse;
@@ -23,16 +25,20 @@ import org.apache.http.protocol.HTTP;
 
 import com.github.luluvise.droid_utils.DroidConfig;
 import com.google.api.client.http.BackOffPolicy;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
+import com.google.api.client.http.HttpIOExceptionHandler;
+import com.google.api.client.util.BackOff;
 import com.google.common.annotations.Beta;
 
 /**
  * Simple class holding default constants related to network connections, such
- * as settings (timeouts, keep-alive) and so on.
+ * as settings (timeouts, keep-alive, back-offs) and so on.
  * 
  * @since 1.0
  * @author Marco Salis
  */
 @Beta
+@Immutable
 public class NetworkConstants {
 
 	/**
@@ -59,9 +65,25 @@ public class NetworkConstants {
 	public static final int REQUEST_RETRIES = 8;
 
 	/**
+	 * Default, immutable {@link BackOff} to be used for HTTP requests
+	 */
+	public static final BackOff DEFAULT_BACKOFF = new DefaultLinearBackOff();
+
+	/**
+	 * Default, immutable {@link BackOffRequired} to be used for HTTP requests
+	 */
+	public static final BackOffRequired DEFAULT_BACKOFF_REQUIRED = new DefaultBackOffRequired();
+
+	/**
 	 * Default, immutable {@link BackOffPolicy} to be used for HTTP requests
 	 */
 	public static final BackOffPolicy BACKOFF_POLICY = new DefaultBackOffPolicy();
+
+	/**
+	 * Default, immutable {@link HttpIOExceptionHandler} to be used for HTTP
+	 * requests
+	 */
+	public static final HttpIOExceptionHandler IO_EXCEPTION_HANDLER = new DefaultHttpIOExceptionHandler();
 
 	/**
 	 * Attempts to retrieve a "Keep-Alive" header from the passed

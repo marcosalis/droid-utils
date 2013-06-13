@@ -28,6 +28,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.github.luluvise.droid_utils.DroidConfig;
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -191,7 +192,10 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	}
 
 	/**
-	 * Default implementation of {@link HttpRequestInitializer}
+	 * Default implementation of {@link HttpRequestInitializer}. Every request
+	 * is initialized with default timeouts, number of retries, exception
+	 * handler and back off policies using the constants in
+	 * {@link NetworkConstants}.
 	 */
 	public static class DefaultHttpRequestInitializer implements HttpRequestInitializer {
 
@@ -212,9 +216,12 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 			request.setConnectTimeout(NetworkConstants.DEFAULT_CONN_TIMEOUT);
 			request.setReadTimeout(NetworkConstants.DEFAULT_READ_TIMEOUT);
 			request.setNumberOfRetries(NetworkConstants.REQUEST_RETRIES);
-			request.setBackOffPolicy(NetworkConstants.BACKOFF_POLICY);
-			// disable this if using NetHttpTransport!
-			request.setRetryOnExecuteIOException(true); // fail-over
+			final HttpBackOffUnsuccessfulResponseHandler handler = new HttpBackOffUnsuccessfulResponseHandler(
+					NetworkConstants.DEFAULT_BACKOFF);
+			handler.setBackOffRequired(NetworkConstants.DEFAULT_BACKOFF_REQUIRED);
+			request.setUnsuccessfulResponseHandler(handler);
+			// TODO: test this when using NetHttpTransport
+			request.setIOExceptionHandler(NetworkConstants.IO_EXCEPTION_HANDLER);
 			request.setThrowExceptionOnExecuteError(false);
 
 			if (DroidConfig.DEBUG) {
