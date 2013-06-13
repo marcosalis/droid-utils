@@ -30,8 +30,8 @@ import com.github.luluvise.droid_utils.cache.bitmap.BitmapLruCache;
 import com.github.luluvise.droid_utils.cache.keys.CacheUrlKey;
 import com.github.luluvise.droid_utils.content.ContentProxy.ActionType;
 import com.github.luluvise.droid_utils.content.bitmap.BitmapAsyncSetter.BitmapSource;
+import com.github.luluvise.droid_utils.lib.network.ByteArrayDownloader;
 import com.github.luluvise.droid_utils.logging.LogUtils;
-import com.github.luluvise.droid_utils.network.ByteArrayDownloader;
 import com.google.common.annotations.Beta;
 
 /**

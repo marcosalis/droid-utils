@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.luluvise.droid_utils.network;
+package com.github.luluvise.droid_utils.lib.network;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -26,6 +26,7 @@ import android.util.Log;
 
 import com.github.luluvise.droid_utils.DroidConfig;
 import com.github.luluvise.droid_utils.logging.LogUtils;
+import com.github.luluvise.droid_utils.network.HttpConnectionManager;
 import com.google.api.client.http.HttpMethods;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;

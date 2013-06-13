@@ -36,6 +36,7 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.apache.ApacheHttpTransport;
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.common.annotations.Beta;
 
 /**
@@ -92,9 +93,8 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 		// set keep-alive global property (NOT NEEDED)
 		// System.setProperty("http.keepAlive", "false");
 
-		if (DroidConfig.DEBUG) {
-			Logger.getLogger(HttpTransport.class.getName()).setLevel(Level.CONFIG);
-		}
+		final Level logLevel = DroidConfig.DEBUG ? Level.CONFIG : Level.OFF;
+		Logger.getLogger(HttpTransport.class.getName()).setLevel(logLevel);
 	}
 
 	/**
@@ -197,6 +197,8 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	 * is initialized with default timeouts, number of retries, exception
 	 * handler and back off policies using the constants in
 	 * {@link NetworkConstants}.
+	 * 
+	 * TODO: use {@link ExponentialBackOff} as default solution
 	 */
 	public static class DefaultHttpRequestInitializer implements HttpRequestInitializer {
 
@@ -217,10 +219,12 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 			request.setConnectTimeout(NetworkConstants.DEFAULT_CONN_TIMEOUT);
 			request.setReadTimeout(NetworkConstants.DEFAULT_READ_TIMEOUT);
 			request.setNumberOfRetries(NetworkConstants.REQUEST_RETRIES);
+
 			final HttpBackOffUnsuccessfulResponseHandler handler = new HttpBackOffUnsuccessfulResponseHandler(
 					NetworkConstants.DEFAULT_BACKOFF);
 			handler.setBackOffRequired(NetworkConstants.DEFAULT_BACKOFF_REQUIRED);
 			request.setUnsuccessfulResponseHandler(handler);
+
 			// TODO: test this when using NetHttpTransport
 			request.setIOExceptionHandler(NetworkConstants.IO_EXCEPTION_HANDLER);
 			request.setThrowExceptionOnExecuteError(false);

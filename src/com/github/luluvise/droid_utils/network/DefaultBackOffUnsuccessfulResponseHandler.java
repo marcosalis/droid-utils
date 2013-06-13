@@ -44,10 +44,21 @@ import com.google.common.annotations.Beta;
 @NotThreadSafe
 public class DefaultBackOffUnsuccessfulResponseHandler implements HttpUnsuccessfulResponseHandler {
 
+	private static final DefaultBackOffRequired DEFAULT_BACK_OFF_REQUIRED = new DefaultBackOffRequired();
+	private static final DefaultLinearBackOff DEFAULT_BACK_OFF = new DefaultLinearBackOff();
+
 	protected final BackOff mBackOff;
 	protected final BackOffRequired mBackOffRequired;
 
 	private Sleeper mSleeper = Sleeper.DEFAULT;
+
+	/**
+	 * Constructs a new instance using the default {@link BackOffRequired} and a
+	 * {@link BackOff}.
+	 */
+	public DefaultBackOffUnsuccessfulResponseHandler() {
+		this(DEFAULT_BACK_OFF_REQUIRED, DEFAULT_BACK_OFF);
+	}
 
 	/**
 	 * Constructs a new instance from a {@link BackOffRequired} and a
