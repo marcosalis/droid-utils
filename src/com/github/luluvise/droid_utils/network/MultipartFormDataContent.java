@@ -30,7 +30,7 @@ import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpMediaType;
 import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.MultipartRelatedContent;
+import com.google.api.client.http.MultipartContent;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
@@ -39,7 +39,7 @@ import com.google.common.base.Preconditions;
  * href="http://tools.ietf.org/html/rfc2388">RFC 2388: Returning Values from
  * Forms: multipart/form-data</a>
  * 
- * Implementation customised from the {@link MultipartRelatedContent} class.<br>
+ * Implementation customised from the {@link MultipartContent} class.<br>
  * <br>
  * For a reference on how to build a multipart/form-data request see:<br>
  * {@link http://chxo.com/be2/20050724_93bf.html}
@@ -217,4 +217,5 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 		HttpMediaType hmt = new HttpMediaType(contentType);
 		return hmt.getType().equals("text") || hmt.getType().equals("application");
 	}
+
 }
