@@ -27,6 +27,7 @@ import com.github.luluvise.droid_utils.DroidConfig;
 import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
 import com.google.api.client.http.HttpIOExceptionHandler;
+import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
 import com.google.api.client.util.BackOff;
 import com.google.common.annotations.Beta;
 
@@ -73,6 +74,12 @@ public class NetworkConstants {
 	 * Default, immutable {@link BackOffRequired} to be used for HTTP requests
 	 */
 	public static final BackOffRequired DEFAULT_BACKOFF_REQUIRED = new DefaultBackOffRequired();
+
+	/**
+	 * Default, immutable {@link HttpUnsuccessfulResponseHandler} to be used for
+	 * HTTP requests.
+	 */
+	public static final HttpUnsuccessfulResponseHandler DEFAULT_RESPONSE_HANDLER = new DefaultBackOffUnsuccessfulResponseHandler();
 
 	/**
 	 * Default, immutable {@link HttpIOExceptionHandler} to be used for HTTP

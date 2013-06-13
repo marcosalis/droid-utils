@@ -29,7 +29,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.github.luluvise.droid_utils.DroidConfig;
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -220,10 +219,8 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 			request.setReadTimeout(NetworkConstants.DEFAULT_READ_TIMEOUT);
 			request.setNumberOfRetries(NetworkConstants.REQUEST_RETRIES);
 
-			final HttpBackOffUnsuccessfulResponseHandler handler = new HttpBackOffUnsuccessfulResponseHandler(
-					NetworkConstants.DEFAULT_BACKOFF);
-			handler.setBackOffRequired(NetworkConstants.DEFAULT_BACKOFF_REQUIRED);
-			request.setUnsuccessfulResponseHandler(handler);
+			// use global default response handler to avoid excessive GC
+			request.setUnsuccessfulResponseHandler(NetworkConstants.DEFAULT_RESPONSE_HANDLER);
 
 			// TODO: test this when using NetHttpTransport
 			request.setIOExceptionHandler(NetworkConstants.IO_EXCEPTION_HANDLER);

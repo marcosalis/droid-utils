@@ -43,9 +43,6 @@ public class DefaultBackOffRequired implements BackOffRequired {
 	@Override
 	public boolean isRequired(@Nonnull HttpResponse response) {
 		final int statusCode = response.getStatusCode();
-		if (DroidConfig.DEBUG) {
-			Log.v(TAG, "Backoff check requested for status code: " + statusCode);
-		}
 		switch (statusCode) {
 		case 0:
 			/*
@@ -53,21 +50,21 @@ public class DefaultBackOffRequired implements BackOffRequired {
 			 * TODO: check if the new google-http-java-client still causes it
 			 */
 			if (DroidConfig.DEBUG) {
-				Log.e(TAG, "Handle '0' response status code for request to: "
+				Log.e(TAG, "Backoff required for '0' response status code to: "
 						+ response.getRequest().getUrl());
 			}
 			return true;
 		case HttpStatus.SC_CONFLICT:
 			// server-side conflict, retry with backoff
 			if (DroidConfig.DEBUG) {
-				Log.w(TAG, "Handle '409 - Conflict' response status code for request to: "
+				Log.w(TAG, "Backoff required for '409 - Conflict' response status code to: "
 						+ response.getRequest().getUrl());
 			}
 			return true;
 		case HttpStatus.SC_BAD_GATEWAY:
 			// server unavailable, or too busy, retry with backoff
 			if (DroidConfig.DEBUG) {
-				Log.w(TAG, "Handle '502 - Bad Gateway' response status code for request to: "
+				Log.w(TAG, "Handle '502 - Bad Gateway' response status code to: "
 						+ response.getRequest().getUrl());
 			}
 			return true;
