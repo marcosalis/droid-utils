@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -181,11 +182,11 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 
 	/**
 	 * Initialize here {@link HttpRequest}'s parameters for the request factory
-	 * to other servers (some Luluvise custom headers aren't needed here)
+	 * to other servers
 	 * 
 	 * @param transport
-	 *            The HttpTransport used to create requests
-	 * @return The HttpRequestFactory
+	 *            The {@link HttpTransport} used to create requests
+	 * @return The created {@link HttpRequestFactory}
 	 */
 	private HttpRequestFactory createStandardRequestFactory(HttpTransport transport) {
 		return transport.createRequestFactory(new DefaultHttpRequestInitializer());
@@ -201,7 +202,7 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 
 		@Override
 		@OverridingMethodsMustInvokeSuper
-		public void initialize(HttpRequest request) throws IOException {
+		public void initialize(@Nonnull HttpRequest request) throws IOException {
 			setDefaultRequestParams(request);
 		}
 
@@ -212,7 +213,7 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 		 * @param request
 		 *            The request to set the parameters in
 		 */
-		protected static void setDefaultRequestParams(HttpRequest request) {
+		protected static void setDefaultRequestParams(@Nonnull HttpRequest request) {
 			request.setConnectTimeout(NetworkConstants.DEFAULT_CONN_TIMEOUT);
 			request.setReadTimeout(NetworkConstants.DEFAULT_READ_TIMEOUT);
 			request.setNumberOfRetries(NetworkConstants.REQUEST_RETRIES);
@@ -224,9 +225,9 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 			request.setIOExceptionHandler(NetworkConstants.IO_EXCEPTION_HANDLER);
 			request.setThrowExceptionOnExecuteError(false);
 
-			if (DroidConfig.DEBUG) {
-				request.setLoggingEnabled(true);
-			}
+			// enable logging only when in debug mode
+			request.setLoggingEnabled(DroidConfig.DEBUG);
+			request.setCurlLoggingEnabled(DroidConfig.DEBUG);
 		}
 	}
 

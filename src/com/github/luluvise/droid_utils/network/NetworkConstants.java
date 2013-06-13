@@ -24,7 +24,7 @@ import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.protocol.HTTP;
 
 import com.github.luluvise.droid_utils.DroidConfig;
-import com.google.api.client.http.BackOffPolicy;
+import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
 import com.google.api.client.http.HttpIOExceptionHandler;
 import com.google.api.client.util.BackOff;
@@ -75,13 +75,11 @@ public class NetworkConstants {
 	public static final BackOffRequired DEFAULT_BACKOFF_REQUIRED = new DefaultBackOffRequired();
 
 	/**
-	 * Default, immutable {@link BackOffPolicy} to be used for HTTP requests
-	 */
-	public static final BackOffPolicy BACKOFF_POLICY = new DefaultBackOffPolicy();
-
-	/**
 	 * Default, immutable {@link HttpIOExceptionHandler} to be used for HTTP
-	 * requests
+	 * requests.
+	 * 
+	 * TODO: create a {@link HttpBackOffIOExceptionHandler} factory to be able
+	 * to use an exponential back off policy.
 	 */
 	public static final HttpIOExceptionHandler IO_EXCEPTION_HANDLER = new DefaultHttpIOExceptionHandler();
 

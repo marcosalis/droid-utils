@@ -22,6 +22,7 @@ import javax.annotation.concurrent.Immutable;
 import android.util.Log;
 
 import com.github.luluvise.droid_utils.DroidConfig;
+import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpIOExceptionHandler;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.util.BackOff;
@@ -32,9 +33,9 @@ import com.google.common.annotations.Beta;
 /**
  * Default, general simple {@link HttpIOExceptionHandler} implementation (as
  * suggested in docs) that uses the {@link DefaultLinearBackOff} to handle
- * request IO exceptions.
- * 
- * TODO: use exponential backoff here?
+ * request IO exceptions and, opposite to the library
+ * {@link HttpBackOffIOExceptionHandler}, can be used for multiple requests as
+ * it is stateless.
  * 
  * @since 1.0
  * @author Marco Salis
