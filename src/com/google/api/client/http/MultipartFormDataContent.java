@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Luluvise Ltd
+ * Copyright 2013 Marco Salis
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.luluvise.droid_utils.http;
+package com.google.api.client.http;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -23,26 +23,31 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.google.api.client.http.AbstractHttpContent;
-import com.google.api.client.http.HttpContent;
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpMediaType;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.MultipartContent;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
 /**
- * Serializes MIME multipart/form-data content as specified by <a
+ * Serializes MIME "multipart/form-data" content as specified by <a
  * href="http://tools.ietf.org/html/rfc2388">RFC 2388: Returning Values from
  * Forms: multipart/form-data</a>
  * 
  * Implementation customised from the {@link MultipartContent} class.<br>
  * <br>
- * For a reference on how to build a multipart/form-data request see:<br>
- * {@link http://chxo.com/be2/20050724_93bf.html}
+ * For a reference on how to build a multipart/form-data request see:
+ * <ul>
+ * <li>{@link http://chxo.com/be2/20050724_93bf.html}</li>
+ * <li>{@link http://www.faqs.org/rfcs/rfc1867.html}</li>
+ * </ul>
+ * 
+ * Specifications on the "content-disposition" (RFC 2183)<br>
+ * {@link http://tools.ietf.org/html/rfc2183}
+ * 
+ * The content media type is <code>"multipart/form-data"</code> and the boundary
+ * string can be retrieved by calling {@link #getBoundary()} and set by calling
+ * {@link #setBoundary(String)}.
  * 
  * @since 1.0
  * @author Marco Salis
@@ -50,6 +55,23 @@ import com.google.common.base.Preconditions;
 @Beta
 @NotThreadSafe
 public class MultipartFormDataContent extends AbstractHttpContent {
+
+	private static final byte[] CR_LF = "\r\n".getBytes();
+	private static final byte[] CONTENT_DISP = "Content-Disposition: ".getBytes();
+	private static final byte[] CONTENT_TYPE = "Content-Type: ".getBytes();
+	private static final byte[] CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding: binary"
+			.getBytes();
+	private static final byte[] TWO_DASHES = "--".getBytes();
+
+	protected static final String DEFAULT_BOUNDARY = "0xKhTmLbOuNdArY";
+
+	/**
+	 * Factory method to create {@link HttpMediaType} with media type
+	 * <code>"multipart/form-data"</code>
+	 */
+	protected static final HttpMediaType getMultipartFormDataMediaType() {
+		return new HttpMediaType("multipart/form-data");
+	}
 
 	/**
 	 * Collection of HTTP content parts.
@@ -60,57 +82,72 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	 */
 	private final Collection<HttpContent> parts;
 
-	private static final byte[] CR_LF = "\r\n".getBytes();
-	private static final byte[] CONTENT_DISP = "Content-Disposition: ".getBytes();
-	private static final byte[] CONTENT_TYPE = "Content-Type: ".getBytes();
-	private static final byte[] CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding: binary"
-			.getBytes();
-	private static final byte[] TWO_DASHES = "--".getBytes();
-	private static final String BOUNDARY_STRING = "0xKhTmLbOuNdArY";
-	private static final byte[] BOUNDARY = BOUNDARY_STRING.getBytes();
-
 	private byte[] mContentDisposition;
 
 	/**
+	 * Creates a new {@link MultipartFormDataContent}.
+	 * 
 	 * @param content
 	 *            first HTTP content part
 	 * @param otherParts
 	 *            other HTTP content parts
 	 */
 	public MultipartFormDataContent(HttpContent firstPart, HttpContent... otherParts) {
-		super(new HttpMediaType("multipart/form-data").setParameter("boundary", BOUNDARY_STRING));
-		List<HttpContent> parts = new ArrayList<HttpContent>(otherParts.length + 1);
+		super(getMultipartFormDataMediaType().setParameter("boundary", DEFAULT_BOUNDARY));
+		final List<HttpContent> parts = new ArrayList<HttpContent>(otherParts.length + 1);
 		parts.add(firstPart);
 		parts.addAll(Arrays.asList(otherParts));
 		this.parts = parts;
 	}
 
 	/**
-	 * Sets this multi-part content as the content for the given HTTP request,
-	 * set the {@link HttpHeaders#setMimeVersion(String) MIME version header} to
-	 * {@code "1.0"} and the {@link HttpHeaders#setContentType(String)} to
-	 * {@code "multipart/form-data"}.
+	 * From RFC 2388:
 	 * 
-	 * @param request
-	 *            HTTP request
+	 * <pre>
+	 * "multipart/form-data" contains a series of parts. Each part is
+	 *    expected to contain a content-disposition header [RFC 2183] where the
+	 *    disposition type is "form-data", and where the disposition contains
+	 *    an (additional) parameter of "name", where the value of that
+	 *    parameter is the original field name in the form. For example, a part
+	 *    might contain a header:
+	 * 
+	 *         Content-Disposition: form-data; name="user"
+	 * 
+	 *    with the value corresponding to the entry of the "user" field.
+	 * 
+	 *    Field names originally in non-ASCII character sets may be encoded
+	 *    within the value of the "name" parameter using the standard method
+	 *    described in RFC 2047.
+	 * 
+	 *    As with all multipart MIME types, each part has an optional
+	 *    "Content-Type", which defaults to text/plain.  If the contents of a
+	 *    file are returned via filling out a form, then the file input is
+	 *    identified as the appropriate media type, if known, or
+	 *    "application/octet-stream".  If multiple files are to be returned as
+	 *    the result of a single form entry, they should be represented as a
+	 *    "multipart/mixed" part embedded within the "multipart/form-data".
+	 * 
+	 *    Each part may be encoded and the "content-transfer-encoding" header
+	 *    supplied if the value of that part does not conform to the default
+	 *    encoding.
+	 * </pre>
+	 * 
+	 * @param contentDisposition
 	 */
-	public void forRequest(HttpRequest request) {
-		request.setContent(this);
-		// request.getHeaders().setMimeVersion("1.0");
-	}
-
-	public void setContentDisposition(String contentDisposition) {
+	public void setContentDisposition(@Nonnull String contentDisposition) {
 		mContentDisposition = contentDisposition.getBytes();
 	}
 
+	@Override
 	public void writeTo(OutputStream out) throws IOException {
-
+		final byte[] boundaryBytes = getBoundary().getBytes();
 		// do *NOT* put more than one CR_LF between lines
 		out.write(TWO_DASHES);
-		out.write(BOUNDARY);
+		out.write(boundaryBytes);
 		for (HttpContent part : parts) {
 			// add custom headers
 			if (mContentDisposition != null) {
+				// FIXME: content disposition is specific to each part
 				out.write(CR_LF);
 				out.write(CONTENT_DISP);
 				out.write(mContentDisposition);
@@ -131,7 +168,7 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 			part.writeTo(out);
 			out.write(CR_LF);
 			out.write(TWO_DASHES);
-			out.write(BOUNDARY);
+			out.write(boundaryBytes);
 		}
 		out.write(TWO_DASHES);
 		out.flush();
@@ -139,7 +176,8 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 
 	@Override
 	public long computeLength() throws IOException {
-		long result = TWO_DASHES.length * 2 + BOUNDARY.length;
+		final byte[] boundaryBytes = getBoundary().getBytes();
+		long result = TWO_DASHES.length * 2 + boundaryBytes.length;
 		for (HttpContent part : parts) {
 			long length = part.getLength();
 			if (length < 0) {
@@ -156,7 +194,7 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 			if (!isTextBasedContentType(contentType)) {
 				result += CONTENT_TRANSFER_ENCODING.length + CR_LF.length;
 			}
-			result += CR_LF.length * 3 + length + TWO_DASHES.length + BOUNDARY.length;
+			result += CR_LF.length * 3 + length + TWO_DASHES.length + boundaryBytes.length;
 		}
 		return result;
 	}
@@ -178,20 +216,25 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	}
 
 	/**
-	 * Returns the boundary string to use.
+	 * Returns the boundary string that the content uses.
 	 */
-	public String getBoundary() {
-		return BOUNDARY_STRING;
+	public final String getBoundary() {
+		// media type is always not null here
+		return getMediaType().getParameter("boundary");
 	}
 
 	/**
-	 * Sets the boundary string to use.
+	 * Sets the boundary string to use (must be not null)
 	 * 
-	 * <p>
-	 * Defaults to {@code "END_OF_PART"}.
-	 * </p>
+	 * If this is not called, the boundary defaults to {@link #DEFAULT_BOUNDARY}
+	 * 
+	 * @param boundary
+	 *            The new boundary for the content
+	 * @throws NullPointerException
+	 *             if boundary is null
 	 */
-	public MultipartFormDataContent setBoundary(String boundary) {
+	public final MultipartFormDataContent setBoundary(@Nonnull String boundary) {
+		// media type is always not null here
 		getMediaType().setParameter("boundary", Preconditions.checkNotNull(boundary));
 		return this;
 	}
