@@ -17,6 +17,7 @@ package com.google.api.client.http;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.google.common.annotations.Beta;
@@ -56,12 +58,21 @@ import com.google.common.base.Preconditions;
 @NotThreadSafe
 public class MultipartFormDataContent extends AbstractHttpContent {
 
-	private static final byte[] CR_LF = "\r\n".getBytes();
-	private static final byte[] CONTENT_DISP = "Content-Disposition: ".getBytes();
-	private static final byte[] CONTENT_TYPE = "Content-Type: ".getBytes();
-	private static final byte[] CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding: binary"
+	private static final String CR_LF_STR = "\r\n";
+	private static final byte[] CR_LF = CR_LF_STR.getBytes();
+
+	private static final String CONTENT_DISP_STR = "Content-Disposition: ";
+	private static final byte[] CONTENT_DISP = CONTENT_DISP_STR.getBytes();
+
+	private static final String CONTENT_TYPE_STR = "Content-Type: ";
+	private static final byte[] CONTENT_TYPE = CONTENT_TYPE_STR.getBytes();
+
+	private static final String CONTENT_TRANSFER_ENCODING_STR = "Content-Transfer-Encoding: binary";
+	private static final byte[] CONTENT_TRANSFER_ENCODING = CONTENT_TRANSFER_ENCODING_STR
 			.getBytes();
-	private static final byte[] TWO_DASHES = "--".getBytes();
+
+	private static final String TWO_DASHES_STR = "--";
+	private static final byte[] TWO_DASHES = TWO_DASHES_STR.getBytes();
 
 	protected static final String DEFAULT_BOUNDARY = "0xKhTmLbOuNdArY";
 
@@ -82,7 +93,7 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	 */
 	private final Collection<HttpContent> parts;
 
-	private byte[] mContentDisposition;
+	private String mContentDisposition;
 
 	/**
 	 * Creates a new {@link MultipartFormDataContent}.
@@ -98,6 +109,86 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 		parts.add(firstPart);
 		parts.addAll(Arrays.asList(otherParts));
 		this.parts = parts;
+	}
+
+	@Override
+	public void writeTo(OutputStream out) throws IOException {
+		final OutputStreamWriter writer = new OutputStreamWriter(out, getCharset());
+
+		final String boundary = getBoundary();
+		// do *NOT* put more than one CR_LF between lines
+		writer.write(TWO_DASHES_STR);
+		writer.write(boundary);
+		for (HttpContent part : parts) {
+			// add custom headers
+			if (mContentDisposition != null) {
+				// FIXME: content disposition is specific to each part
+				writer.write(CR_LF_STR);
+				writer.write(CONTENT_DISP_STR);
+				writer.write(mContentDisposition);
+			}
+			String contentType = part.getType();
+			if (contentType != null) {
+				writer.write(CR_LF_STR);
+				writer.write(CONTENT_TYPE_STR);
+				writer.write(contentType);
+			}
+			writer.write(CR_LF_STR);
+			if (!isTextBasedContentType(contentType)) {
+				writer.write(CONTENT_TRANSFER_ENCODING_STR);
+				writer.write(CR_LF_STR);
+			}
+			writer.write(CR_LF_STR);
+			writer.flush(); // flush before writing content
+			part.writeTo(out);
+			writer.write(CR_LF_STR);
+			writer.write(TWO_DASHES_STR);
+			writer.write(boundary);
+		}
+		writer.write(TWO_DASHES_STR);
+		writer.flush(); // flush before returning
+	}
+
+	@Override
+	public long computeLength() throws IOException {
+		final byte[] boundaryBytes = getBoundary().getBytes();
+		long result = TWO_DASHES.length * 2 + boundaryBytes.length;
+		for (HttpContent part : parts) {
+			long length = part.getLength();
+			if (length < 0) {
+				return -1;
+			}
+			if (mContentDisposition != null) {
+				result += CR_LF.length + CONTENT_DISP.length
+						+ mContentDisposition.getBytes().length;
+			}
+			String contentType = part.getType();
+			if (contentType != null) {
+				byte[] typeBytes = contentType.getBytes();
+				result += CR_LF.length + CONTENT_TYPE.length + typeBytes.length;
+			}
+			if (!isTextBasedContentType(contentType)) {
+				result += CONTENT_TRANSFER_ENCODING.length + CR_LF.length;
+			}
+			result += CR_LF.length * 3 + length + TWO_DASHES.length + boundaryBytes.length;
+		}
+		return result;
+	}
+
+	@Override
+	public boolean retrySupported() {
+		for (HttpContent part : parts) {
+			if (!part.retrySupported()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public MultipartFormDataContent setMediaType(HttpMediaType mediaType) {
+		super.setMediaType(mediaType);
+		return this;
 	}
 
 	/**
@@ -134,85 +225,8 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	 * 
 	 * @param contentDisposition
 	 */
-	public void setContentDisposition(@Nonnull String contentDisposition) {
-		mContentDisposition = contentDisposition.getBytes();
-	}
-
-	@Override
-	public void writeTo(OutputStream out) throws IOException {
-		final byte[] boundaryBytes = getBoundary().getBytes();
-		// do *NOT* put more than one CR_LF between lines
-		out.write(TWO_DASHES);
-		out.write(boundaryBytes);
-		for (HttpContent part : parts) {
-			// add custom headers
-			if (mContentDisposition != null) {
-				// FIXME: content disposition is specific to each part
-				out.write(CR_LF);
-				out.write(CONTENT_DISP);
-				out.write(mContentDisposition);
-			}
-			String contentType = part.getType();
-			if (contentType != null) {
-				byte[] typeBytes = contentType.getBytes();
-				out.write(CR_LF);
-				out.write(CONTENT_TYPE);
-				out.write(typeBytes);
-			}
-			out.write(CR_LF);
-			if (!isTextBasedContentType(contentType)) {
-				out.write(CONTENT_TRANSFER_ENCODING);
-				out.write(CR_LF);
-			}
-			out.write(CR_LF);
-			part.writeTo(out);
-			out.write(CR_LF);
-			out.write(TWO_DASHES);
-			out.write(boundaryBytes);
-		}
-		out.write(TWO_DASHES);
-		out.flush();
-	}
-
-	@Override
-	public long computeLength() throws IOException {
-		final byte[] boundaryBytes = getBoundary().getBytes();
-		long result = TWO_DASHES.length * 2 + boundaryBytes.length;
-		for (HttpContent part : parts) {
-			long length = part.getLength();
-			if (length < 0) {
-				return -1;
-			}
-			if (mContentDisposition != null) {
-				result += CR_LF.length + CONTENT_DISP.length + mContentDisposition.length;
-			}
-			String contentType = part.getType();
-			if (contentType != null) {
-				byte[] typeBytes = contentType.getBytes();
-				result += CR_LF.length + CONTENT_TYPE.length + typeBytes.length;
-			}
-			if (!isTextBasedContentType(contentType)) {
-				result += CONTENT_TRANSFER_ENCODING.length + CR_LF.length;
-			}
-			result += CR_LF.length * 3 + length + TWO_DASHES.length + boundaryBytes.length;
-		}
-		return result;
-	}
-
-	@Override
-	public boolean retrySupported() {
-		for (HttpContent onePart : parts) {
-			if (!onePart.retrySupported()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	@Override
-	public MultipartFormDataContent setMediaType(HttpMediaType mediaType) {
-		super.setMediaType(mediaType);
-		return this;
+	public void setContentDisposition(@Nullable String contentDisposition) {
+		mContentDisposition = contentDisposition;
 	}
 
 	/**
