@@ -18,7 +18,7 @@ package com.github.luluvise.droid_utils.network;
 import java.io.IOException;
 
 import javax.annotation.Nonnull;
-import javax.annotation.concurrent.NotThreadSafe;
+import javax.annotation.concurrent.ThreadSafe;
 
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
@@ -41,7 +41,7 @@ import com.google.common.annotations.Beta;
  * @author Marco Salis
  */
 @Beta
-@NotThreadSafe
+@ThreadSafe
 public class DefaultBackOffUnsuccessfulResponseHandler implements HttpUnsuccessfulResponseHandler {
 
 	private static final DefaultBackOffRequired DEFAULT_BACK_OFF_REQUIRED = new DefaultBackOffRequired();
@@ -50,11 +50,14 @@ public class DefaultBackOffUnsuccessfulResponseHandler implements HttpUnsuccessf
 	protected final BackOff mBackOff;
 	protected final BackOffRequired mBackOffRequired;
 
-	private Sleeper mSleeper = Sleeper.DEFAULT;
+	private volatile Sleeper mSleeper = Sleeper.DEFAULT;
 
 	/**
 	 * Constructs a new instance using the default {@link BackOffRequired} and a
-	 * {@link BackOff}.
+	 * linear {@link BackOff}.
+	 * 
+	 * An instance built using this constructor can be reused among different
+	 * requests as it's immutable.
 	 */
 	public DefaultBackOffUnsuccessfulResponseHandler() {
 		this(DEFAULT_BACK_OFF_REQUIRED, DEFAULT_BACK_OFF);
@@ -63,6 +66,11 @@ public class DefaultBackOffUnsuccessfulResponseHandler implements HttpUnsuccessf
 	/**
 	 * Constructs a new instance from a {@link BackOffRequired} and a
 	 * {@link BackOff}.
+	 * 
+	 * When using this constructor, be aware that {@link BackOff} should be used
+	 * for only one request as the Google library doesn't reset it anymore. The
+	 * only exception is when either {@link BackOff} and {@link BackOffPolicy}
+	 * are stateless.
 	 * 
 	 * @param backOffRequired
 	 *            The {@link BackOffRequired}

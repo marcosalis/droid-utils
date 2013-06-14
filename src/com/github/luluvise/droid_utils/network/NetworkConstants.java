@@ -15,6 +15,7 @@
  */
 package com.github.luluvise.droid_utils.network;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 import org.apache.http.HeaderElement;
@@ -96,7 +97,7 @@ public class NetworkConstants {
 	 * 
 	 * @return The keep alive time or -1 if not found
 	 */
-	public static long getKeepAliveHeader(HttpResponse response) {
+	public static long getKeepAliveHeader(@Nonnull HttpResponse response) {
 		HeaderElementIterator it = new BasicHeaderElementIterator(
 				response.headerIterator(HTTP.CONN_KEEP_ALIVE));
 		while (it.hasNext()) {
