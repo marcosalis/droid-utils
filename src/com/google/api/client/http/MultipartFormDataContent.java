@@ -19,15 +19,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
+import com.google.api.client.http.MultipartContent.Part;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
@@ -58,6 +57,11 @@ import com.google.common.base.Preconditions;
 @NotThreadSafe
 public class MultipartFormDataContent extends AbstractHttpContent {
 
+	/*
+	 * Saving a static reference to byte arrays of constant strings to avoid
+	 * calling the expensive getBytes() every time it's needed
+	 */
+
 	private static final String CR_LF_STR = "\r\n";
 	private static final byte[] CR_LF = CR_LF_STR.getBytes();
 
@@ -67,9 +71,8 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	private static final String CONTENT_TYPE_STR = "Content-Type: ";
 	private static final byte[] CONTENT_TYPE = CONTENT_TYPE_STR.getBytes();
 
-	private static final String CONTENT_TRANSFER_ENCODING_STR = "Content-Transfer-Encoding: binary";
-	private static final byte[] CONTENT_TRANSFER_ENCODING = CONTENT_TRANSFER_ENCODING_STR
-			.getBytes();
+	private static final String TRANSFER_ENCODING_STR = "Content-Transfer-Encoding: binary";
+	private static final byte[] TRANSFER_ENCODING = TRANSFER_ENCODING_STR.getBytes();
 
 	private static final String TWO_DASHES_STR = "--";
 	private static final byte[] TWO_DASHES = TWO_DASHES_STR.getBytes();
@@ -84,14 +87,8 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 		return new HttpMediaType("multipart/form-data");
 	}
 
-	/**
-	 * Collection of HTTP content parts.
-	 * 
-	 * <p>
-	 * By default, it is an empty list.
-	 * </p>
-	 */
-	private final Collection<HttpContent> parts;
+	/** Parts of the HTTP multipart request. */
+	private ArrayList<Part> parts = new ArrayList<Part>();
 
 	private String mContentDisposition;
 
@@ -103,12 +100,8 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	 * @param otherParts
 	 *            other HTTP content parts
 	 */
-	public MultipartFormDataContent(HttpContent firstPart, HttpContent... otherParts) {
+	public MultipartFormDataContent() {
 		super(getMultipartFormDataMediaType().setParameter("boundary", DEFAULT_BOUNDARY));
-		final List<HttpContent> parts = new ArrayList<HttpContent>(otherParts.length + 1);
-		parts.add(firstPart);
-		parts.addAll(Arrays.asList(otherParts));
-		this.parts = parts;
 	}
 
 	@Override
@@ -119,7 +112,9 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 		// do *NOT* put more than one CR_LF between lines
 		writer.write(TWO_DASHES_STR);
 		writer.write(boundary);
-		for (HttpContent part : parts) {
+		// iterating over each http content part
+		for (Part part : parts) {
+			final HttpContent content = part.getContent();
 			// add custom headers
 			if (mContentDisposition != null) {
 				// FIXME: content disposition is specific to each part
@@ -127,7 +122,7 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 				writer.write(CONTENT_DISP_STR);
 				writer.write(mContentDisposition);
 			}
-			String contentType = part.getType();
+			String contentType = content.getType();
 			if (contentType != null) {
 				writer.write(CR_LF_STR);
 				writer.write(CONTENT_TYPE_STR);
@@ -135,12 +130,12 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 			}
 			writer.write(CR_LF_STR);
 			if (!isTextBasedContentType(contentType)) {
-				writer.write(CONTENT_TRANSFER_ENCODING_STR);
+				writer.write(TRANSFER_ENCODING_STR);
 				writer.write(CR_LF_STR);
 			}
 			writer.write(CR_LF_STR);
 			writer.flush(); // flush before writing content
-			part.writeTo(out);
+			content.writeTo(out);
 			writer.write(CR_LF_STR);
 			writer.write(TWO_DASHES_STR);
 			writer.write(boundary);
@@ -153,8 +148,9 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	public long computeLength() throws IOException {
 		final byte[] boundaryBytes = getBoundary().getBytes();
 		long result = TWO_DASHES.length * 2 + boundaryBytes.length;
-		for (HttpContent part : parts) {
-			long length = part.getLength();
+		for (Part part : parts) {
+			final HttpContent content = part.getContent();
+			long length = content.getLength();
 			if (length < 0) {
 				return -1;
 			}
@@ -162,13 +158,13 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 				result += CR_LF.length + CONTENT_DISP.length
 						+ mContentDisposition.getBytes().length;
 			}
-			String contentType = part.getType();
+			String contentType = content.getType();
 			if (contentType != null) {
 				byte[] typeBytes = contentType.getBytes();
 				result += CR_LF.length + CONTENT_TYPE.length + typeBytes.length;
 			}
 			if (!isTextBasedContentType(contentType)) {
-				result += CONTENT_TRANSFER_ENCODING.length + CR_LF.length;
+				result += TRANSFER_ENCODING.length + CR_LF.length;
 			}
 			result += CR_LF.length * 3 + length + TWO_DASHES.length + boundaryBytes.length;
 		}
@@ -177,8 +173,8 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 
 	@Override
 	public boolean retrySupported() {
-		for (HttpContent part : parts) {
-			if (!part.retrySupported()) {
+		for (Part part : parts) {
+			if (!part.content.retrySupported()) {
 				return false;
 			}
 		}
@@ -188,6 +184,57 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	@Override
 	public MultipartFormDataContent setMediaType(HttpMediaType mediaType) {
 		super.setMediaType(mediaType);
+		return this;
+	}
+
+	/** Returns an unmodifiable view of the parts of the HTTP multipart request. */
+	public final Collection<Part> getParts() {
+		return Collections.unmodifiableCollection(parts);
+	}
+
+	/**
+	 * Adds an HTTP multipart part.
+	 */
+	public MultipartFormDataContent addPart(Part part) {
+		parts.add(Preconditions.checkNotNull(part));
+		return this;
+	}
+
+	/**
+	 * Adds an {@link HttpContent} with no headers as a new {@link Part}.
+	 */
+	public MultipartFormDataContent addPart(HttpContent content) {
+		parts.add(new Part(Preconditions.checkNotNull(content)));
+		return this;
+	}
+
+	/**
+	 * Sets the parts of the HTTP multipart request.
+	 * 
+	 * <p>
+	 * Overriding is only supported for the purpose of calling the super
+	 * implementation and changing the return type, but nothing else.
+	 * </p>
+	 */
+	public MultipartFormDataContent setParts(Collection<Part> parts) {
+		this.parts = new ArrayList<Part>(parts);
+		return this;
+	}
+
+	/**
+	 * Sets the HTTP content parts of the HTTP multipart request, where each
+	 * part is assumed to have no HTTP headers and no encoding.
+	 * 
+	 * <p>
+	 * Overriding is only supported for the purpose of calling the super
+	 * implementation and changing the return type, but nothing else.
+	 * </p>
+	 */
+	public MultipartFormDataContent setContentParts(Collection<? extends HttpContent> contentParts) {
+		this.parts = new ArrayList<Part>(contentParts.size());
+		for (HttpContent contentPart : contentParts) {
+			addPart(new Part(contentPart));
+		}
 		return this;
 	}
 
@@ -251,13 +298,6 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 		// media type is always not null here
 		getMediaType().setParameter("boundary", Preconditions.checkNotNull(boundary));
 		return this;
-	}
-
-	/**
-	 * Returns the HTTP content parts.
-	 */
-	public Collection<HttpContent> getParts() {
-		return Collections.unmodifiableCollection(parts);
 	}
 
 	/**
