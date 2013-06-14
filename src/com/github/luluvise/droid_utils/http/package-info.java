@@ -26,4 +26,4 @@
  * @since 1.0
  * @author Marco Salis
  */
-package com.github.luluvise.droid_utils.network;
+package com.github.luluvise.droid_utils.http;

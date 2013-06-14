@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.luluvise.droid_utils.network;
+package com.github.luluvise.droid_utils.http;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;

@@ -25,8 +25,8 @@ import javax.annotation.concurrent.Immutable;
 import android.util.Log;
 
 import com.github.luluvise.droid_utils.DroidConfig;
+import com.github.luluvise.droid_utils.http.HttpConnectionManager;
 import com.github.luluvise.droid_utils.logging.LogUtils;
-import com.github.luluvise.droid_utils.network.HttpConnectionManager;
 import com.google.api.client.http.HttpMethods;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;

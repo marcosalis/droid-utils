@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.luluvise.droid_utils.network;
+package com.github.luluvise.droid_utils.http;
 
 import javax.annotation.concurrent.Immutable;
 
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
 import com.google.api.client.http.HttpIOExceptionHandler;
 import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.common.annotations.Beta;
 
 /**
@@ -44,6 +46,17 @@ public class DefaultResponseHandlerFactory {
 	public static final HttpUnsuccessfulResponseHandler createHttpUnsuccessfulResponseHandler() {
 		return new DefaultBackOffUnsuccessfulResponseHandler(
 				NetworkConstants.DEFAULT_BACKOFF_REQUIRED, NetworkConstants.DEFAULT_BACKOFF);
+	}
+
+	/**
+	 * Returns a new instance of a {@link HttpUnsuccessfulResponseHandler} using
+	 * {@link ExponentialBackOff} as back off policy.
+	 * 
+	 * Do not reuse the created handler in more than a request as its state
+	 * wouldn't be reset.
+	 */
+	public static final HttpUnsuccessfulResponseHandler createExponentialBackOffResponseHandler() {
+		return new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff());
 	}
 
 	/**

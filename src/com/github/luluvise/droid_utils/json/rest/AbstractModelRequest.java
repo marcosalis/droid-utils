@@ -33,13 +33,13 @@ import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 
 import com.github.luluvise.droid_utils.annotations.NotForUIThread;
+import com.github.luluvise.droid_utils.http.HttpConnectionManager;
+import com.github.luluvise.droid_utils.http.HttpConnectionManagerInterface;
 import com.github.luluvise.droid_utils.json.jackson.JacksonJsonManager;
 import com.github.luluvise.droid_utils.json.jackson.JacksonObjectParser;
 import com.github.luluvise.droid_utils.json.model.JsonModel;
 import com.github.luluvise.droid_utils.lib.HashUtils;
 import com.github.luluvise.droid_utils.logging.LoggedThreadFactory;
-import com.github.luluvise.droid_utils.network.HttpConnectionManager;
-import com.github.luluvise.droid_utils.network.HttpConnectionManagerInterface;
 import com.google.api.client.http.HttpMethods;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
