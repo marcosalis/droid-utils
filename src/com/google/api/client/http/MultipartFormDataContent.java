@@ -18,15 +18,14 @@ package com.google.api.client.http;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Locale;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.google.api.client.http.MultipartContent.Part;
+import com.google.api.client.util.StreamingContent;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
@@ -35,49 +34,52 @@ import com.google.common.base.Preconditions;
  * href="http://tools.ietf.org/html/rfc2388">RFC 2388: Returning Values from
  * Forms: multipart/form-data</a>
  * 
- * Implementation customised from the {@link MultipartContent} class.<br>
- * <br>
+ * The implementation is a subclass of {@link MultipartContent} that sets the
+ * media type to <code>"multipart/form-data"</code> and defaults to
+ * {@link #DEFAULT_BOUNDARY} as a boundary string.
+ * 
+ * The generated content output differs from the superclass one to specifically
+ * meet the <code>"multipart/form-data"</code> RFC specifications, for example
+ * omitting redundant headers in the content parts (except for nested
+ * "multipart" parts).
+ * 
+ * <p>
+ * Shortcut method {@link #addPart(Part, String, String)} is provided in order
+ * to easily set name and file name for the mandatory header
+ * <code>"Content-Disposition"</code>. This header can be manually set in each
+ * part's headers using the following format (but in this case no consistency
+ * checks are made and the request will most likely fail):
+ * </p>
+ * 
+ * <code>Content-Disposition: form-data; name="user"</code>
+ * 
+ * <p>
+ * Specifications on the "content-disposition" header (RFC 2183):<br>
+ * {@link http://tools.ietf.org/html/rfc2183}
+ * </p>
+ * 
  * For a reference on how to build a multipart/form-data request see:
  * <ul>
  * <li>{@link http://chxo.com/be2/20050724_93bf.html}</li>
  * <li>{@link http://www.faqs.org/rfcs/rfc1867.html}</li>
  * </ul>
  * 
- * Specifications on the "content-disposition" (RFC 2183)<br>
- * {@link http://tools.ietf.org/html/rfc2183}
- * 
- * The content media type is <code>"multipart/form-data"</code> and the boundary
- * string can be retrieved by calling {@link #getBoundary()} and set by calling
- * {@link #setBoundary(String)}.
- * 
  * @since 1.0
  * @author Marco Salis
  */
 @Beta
 @NotThreadSafe
-public class MultipartFormDataContent extends AbstractHttpContent {
+public class MultipartFormDataContent extends MultipartContent {
 
-	/*
-	 * Saving a static reference to byte arrays of constant strings to avoid
-	 * calling the expensive getBytes() every time it's needed
-	 */
+	protected static final String DEFAULT_BOUNDARY = "__0xKhTmLbOuNdArY__";
 
-	private static final String CR_LF_STR = "\r\n";
-	private static final byte[] CR_LF = CR_LF_STR.getBytes();
+	private static final String TWO_DASHES = "--";
+	// HTTP headers are case-insensitive
+	private static final String CONTENT_DISPOSITION = "content-disposition";
+	private static final String CONTENT_TRANSFER_ENCODING = "content-transfer-encoding";
 
-	private static final String CONTENT_DISP_STR = "Content-Disposition: ";
-	private static final byte[] CONTENT_DISP = CONTENT_DISP_STR.getBytes();
-
-	private static final String CONTENT_TYPE_STR = "Content-Type: ";
-	private static final byte[] CONTENT_TYPE = CONTENT_TYPE_STR.getBytes();
-
-	private static final String TRANSFER_ENCODING_STR = "Content-Transfer-Encoding: binary";
-	private static final byte[] TRANSFER_ENCODING = TRANSFER_ENCODING_STR.getBytes();
-
-	private static final String TWO_DASHES_STR = "--";
-	private static final byte[] TWO_DASHES = TWO_DASHES_STR.getBytes();
-
-	protected static final String DEFAULT_BOUNDARY = "0xKhTmLbOuNdArY";
+	private static final String DISPOSITION_STRING = "form-data; name=\"%s\"";
+	private static final String DISPOSITION_STRING_EXT = "form-data; name=\"%1$s\"; filename=\"%2$s\"";
 
 	/**
 	 * Factory method to create {@link HttpMediaType} with media type
@@ -87,201 +89,135 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 		return new HttpMediaType("multipart/form-data");
 	}
 
-	/** Parts of the HTTP multipart request. */
-	private ArrayList<Part> parts = new ArrayList<Part>();
-
-	private String mContentDisposition;
-
 	/**
-	 * Creates a new {@link MultipartFormDataContent}.
-	 * 
-	 * @param content
-	 *            first HTTP content part
-	 * @param otherParts
-	 *            other HTTP content parts
+	 * Creates a new empty {@link MultipartFormDataContent}.
 	 */
 	public MultipartFormDataContent() {
-		super(getMultipartFormDataMediaType().setParameter("boundary", DEFAULT_BOUNDARY));
+		final HttpMediaType mediaType = getMultipartFormDataMediaType();
+		// we're making setMediaType() final, can be called from constructor
+		setMediaType(mediaType.setParameter("boundary", DEFAULT_BOUNDARY));
 	}
 
 	@Override
 	public void writeTo(OutputStream out) throws IOException {
 		final OutputStreamWriter writer = new OutputStreamWriter(out, getCharset());
-
 		final String boundary = getBoundary();
-		// do *NOT* put more than one CR_LF between lines
-		writer.write(TWO_DASHES_STR);
-		writer.write(boundary);
-		// iterating over each http content part
+
+		final Collection<Part> parts = getParts();
+		// iterate over each http content part
 		for (Part part : parts) {
-			final HttpContent content = part.getContent();
-			// add custom headers
-			if (mContentDisposition != null) {
-				// FIXME: content disposition is specific to each part
-				writer.write(CR_LF_STR);
-				writer.write(CONTENT_DISP_STR);
-				writer.write(mContentDisposition);
+			final HttpHeaders headers = new HttpHeaders().setAcceptEncoding(null);
+			final HttpHeaders partHeaders = part.headers;
+			final HttpContent content = part.content;
+			final String contentType = content != null ? content.getType() : null;
+			String contentDisposition = null;
+
+			if (contentType != null && contentType.contains("multipart") && partHeaders != null) {
+				// copy all headers if this is a nested multipart content
+				headers.fromHttpHeaders(partHeaders);
+			} else {
+				// we don't need all headers, just null out the unneeded ones
+				headers.setContentEncoding(null).setUserAgent(null).setContentType(null)
+						.setContentLength(null).set(CONTENT_TRANSFER_ENCODING, null);
+				// add mandatory "content-disposition" header
+				if (partHeaders != null) {
+					contentDisposition = partHeaders.getFirstHeaderStringValue(CONTENT_DISPOSITION);
+				}
+				headers.set(CONTENT_DISPOSITION, contentDisposition);
 			}
-			String contentType = content.getType();
-			if (contentType != null) {
-				writer.write(CR_LF_STR);
-				writer.write(CONTENT_TYPE_STR);
-				writer.write(contentType);
+
+			// analyze the content
+			StreamingContent streamingContent = null;
+			if (content != null) {
+				headers.setContentType(contentType);
+				headers.set(CONTENT_TRANSFER_ENCODING, "binary");
+				final HttpEncoding encoding = part.encoding;
+				if (encoding == null) {
+					streamingContent = content;
+				} else {
+					streamingContent = new HttpEncodingStreamingContent(content, encoding);
+				}
 			}
-			writer.write(CR_LF_STR);
-			if (!isTextBasedContentType(contentType)) {
-				writer.write(TRANSFER_ENCODING_STR);
-				writer.write(CR_LF_STR);
-			}
-			writer.write(CR_LF_STR);
-			writer.flush(); // flush before writing content
-			content.writeTo(out);
-			writer.write(CR_LF_STR);
-			writer.write(TWO_DASHES_STR);
+
+			// add boundary string - DON'T put more than one CR_LF between lines
+			writer.write(TWO_DASHES);
 			writer.write(boundary);
+			writer.write(NEWLINE);
+
+			// write headers
+			HttpHeaders.serializeHeadersForMultipartRequests(headers, null, null, writer);
+
+			// write content if any
+			if (streamingContent != null) {
+				writer.write(NEWLINE);
+				writer.flush();
+				streamingContent.writeTo(out);
+				writer.write(NEWLINE);
+			}
 		}
-		writer.write(TWO_DASHES_STR);
+
+		// final string boundary
+		writer.write(TWO_DASHES);
+		writer.write(boundary);
+		writer.write(TWO_DASHES);
 		writer.flush(); // flush before returning
-	}
-
-	@Override
-	public long computeLength() throws IOException {
-		final byte[] boundaryBytes = getBoundary().getBytes();
-		long result = TWO_DASHES.length * 2 + boundaryBytes.length;
-		for (Part part : parts) {
-			final HttpContent content = part.getContent();
-			long length = content.getLength();
-			if (length < 0) {
-				return -1;
-			}
-			if (mContentDisposition != null) {
-				result += CR_LF.length + CONTENT_DISP.length
-						+ mContentDisposition.getBytes().length;
-			}
-			String contentType = content.getType();
-			if (contentType != null) {
-				byte[] typeBytes = contentType.getBytes();
-				result += CR_LF.length + CONTENT_TYPE.length + typeBytes.length;
-			}
-			if (!isTextBasedContentType(contentType)) {
-				result += TRANSFER_ENCODING.length + CR_LF.length;
-			}
-			result += CR_LF.length * 3 + length + TWO_DASHES.length + boundaryBytes.length;
-		}
-		return result;
-	}
-
-	@Override
-	public boolean retrySupported() {
-		for (Part part : parts) {
-			if (!part.content.retrySupported()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	@Override
-	public MultipartFormDataContent setMediaType(HttpMediaType mediaType) {
-		super.setMediaType(mediaType);
-		return this;
-	}
-
-	/** Returns an unmodifiable view of the parts of the HTTP multipart request. */
-	public final Collection<Part> getParts() {
-		return Collections.unmodifiableCollection(parts);
 	}
 
 	/**
 	 * Adds an HTTP multipart part.
-	 */
-	public MultipartFormDataContent addPart(Part part) {
-		parts.add(Preconditions.checkNotNull(part));
-		return this;
-	}
-
-	/**
-	 * Adds an {@link HttpContent} with no headers as a new {@link Part}.
-	 */
-	public MultipartFormDataContent addPart(HttpContent content) {
-		parts.add(new Part(Preconditions.checkNotNull(content)));
-		return this;
-	}
-
-	/**
-	 * Sets the parts of the HTTP multipart request.
 	 * 
-	 * <p>
-	 * Overriding is only supported for the purpose of calling the super
-	 * implementation and changing the return type, but nothing else.
-	 * </p>
-	 */
-	public MultipartFormDataContent setParts(Collection<Part> parts) {
-		this.parts = new ArrayList<Part>(parts);
-		return this;
-	}
-
-	/**
-	 * Sets the HTTP content parts of the HTTP multipart request, where each
-	 * part is assumed to have no HTTP headers and no encoding.
+	 * This is a shortcut method to allow adding the specified name and
+	 * (optional) filename are added in the <code>"content-disposition"</code>
+	 * headers for the content (as per RFC 2183 par. 2). If the header is
+	 * already specified in the added part, its value is overridden.
 	 * 
-	 * <p>
-	 * Overriding is only supported for the purpose of calling the super
-	 * implementation and changing the return type, but nothing else.
-	 * </p>
+	 * @param part
+	 *            The {@link Part} to add to the content
+	 * @param dispositionName
+	 *            The name of the part (usually the field name in a web form)
+	 * @param dispositionFilename
+	 *            The optional filename of the part (usually for adding a
+	 *            {@link FileContent} part)
 	 */
-	public MultipartFormDataContent setContentParts(Collection<? extends HttpContent> contentParts) {
-		this.parts = new ArrayList<Part>(contentParts.size());
-		for (HttpContent contentPart : contentParts) {
-			addPart(new Part(contentPart));
+	public MultipartFormDataContent addPart(@Nonnull Part part, @Nonnull String dispositionName,
+			@Nullable String dispositionFilename) {
+		Preconditions.checkNotNull(dispositionName);
+		String value = null;
+		if (dispositionFilename == null) {
+			value = String.format(Locale.US, DISPOSITION_STRING, dispositionName);
+		} else { // append filename if not null
+			value = String.format(Locale.US, DISPOSITION_STRING_EXT, dispositionName,
+					dispositionFilename);
 		}
+		if (part.headers == null) {
+			part.headers = new HttpHeaders().setAcceptEncoding(null);
+		}
+		part.headers.set(CONTENT_DISPOSITION, value);
+		return (MultipartFormDataContent) super.addPart(part);
+	}
+
+	/* Overriding this superclass methods just to change the return type */
+
+	@Override
+	public MultipartFormDataContent addPart(@Nonnull Part part) {
+		return (MultipartFormDataContent) super.addPart(part);
+	}
+
+	@Override
+	public MultipartFormDataContent setParts(@Nonnull Collection<Part> parts) {
+		return (MultipartFormDataContent) super.setParts(parts);
+	}
+
+	@Override
+	public MultipartFormDataContent setContentParts(
+			@Nonnull Collection<? extends HttpContent> contentParts) {
+		return (MultipartFormDataContent) super.setContentParts(contentParts);
+	}
+
+	@Override
+	public final MultipartFormDataContent setMediaType(@Nullable HttpMediaType mediaType) {
+		super.setMediaType(mediaType);
 		return this;
-	}
-
-	/**
-	 * From RFC 2388:
-	 * 
-	 * <pre>
-	 * "multipart/form-data" contains a series of parts. Each part is
-	 *    expected to contain a content-disposition header [RFC 2183] where the
-	 *    disposition type is "form-data", and where the disposition contains
-	 *    an (additional) parameter of "name", where the value of that
-	 *    parameter is the original field name in the form. For example, a part
-	 *    might contain a header:
-	 * 
-	 *         Content-Disposition: form-data; name="user"
-	 * 
-	 *    with the value corresponding to the entry of the "user" field.
-	 * 
-	 *    Field names originally in non-ASCII character sets may be encoded
-	 *    within the value of the "name" parameter using the standard method
-	 *    described in RFC 2047.
-	 * 
-	 *    As with all multipart MIME types, each part has an optional
-	 *    "Content-Type", which defaults to text/plain.  If the contents of a
-	 *    file are returned via filling out a form, then the file input is
-	 *    identified as the appropriate media type, if known, or
-	 *    "application/octet-stream".  If multiple files are to be returned as
-	 *    the result of a single form entry, they should be represented as a
-	 *    "multipart/mixed" part embedded within the "multipart/form-data".
-	 * 
-	 *    Each part may be encoded and the "content-transfer-encoding" header
-	 *    supplied if the value of that part does not conform to the default
-	 *    encoding.
-	 * </pre>
-	 * 
-	 * @param contentDisposition
-	 */
-	public void setContentDisposition(@Nullable String contentDisposition) {
-		mContentDisposition = contentDisposition;
-	}
-
-	/**
-	 * Returns the boundary string that the content uses.
-	 */
-	public final String getBoundary() {
-		// media type is always not null here
-		return getMediaType().getParameter("boundary");
 	}
 
 	/**
@@ -294,25 +230,9 @@ public class MultipartFormDataContent extends AbstractHttpContent {
 	 * @throws NullPointerException
 	 *             if boundary is null
 	 */
-	public final MultipartFormDataContent setBoundary(@Nonnull String boundary) {
-		// media type is always not null here
-		getMediaType().setParameter("boundary", Preconditions.checkNotNull(boundary));
-		return this;
-	}
-
-	/**
-	 * Returns whether the given content type is text rather than binary data.
-	 * 
-	 * @param contentType
-	 *            content type or {@code null}
-	 * @return whether it is not {@code null} and text-based
-	 */
-	private static boolean isTextBasedContentType(String contentType) {
-		if (contentType == null) {
-			return false;
-		}
-		HttpMediaType hmt = new HttpMediaType(contentType);
-		return hmt.getType().equals("text") || hmt.getType().equals("application");
+	@Override
+	public MultipartFormDataContent setBoundary(@Nonnull String boundary) {
+		return (MultipartFormDataContent) super.setBoundary(boundary);
 	}
 
 }
