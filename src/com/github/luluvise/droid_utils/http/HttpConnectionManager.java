@@ -77,8 +77,8 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	 */
 	private static final HttpConnectionManager INSTANCE = new HttpConnectionManager();
 
-	private transient HttpTransport mDefaultHttpTransport;
-	private transient HttpRequestFactory mDefaultRequestFactory;
+	private volatile transient HttpTransport mDefaultHttpTransport;
+	private volatile transient HttpRequestFactory mDefaultRequestFactory;
 
 	/**
 	 * Shortcut method to return the {@link HttpConnectionManager} global
