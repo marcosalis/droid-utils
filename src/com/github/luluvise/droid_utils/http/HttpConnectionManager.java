@@ -27,7 +27,10 @@ import javax.annotation.concurrent.ThreadSafe;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import android.util.Log;
+
 import com.github.luluvise.droid_utils.DroidConfig;
+import com.google.api.client.extensions.android.AndroidUtils;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
@@ -35,6 +38,7 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.apache.ApacheHttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.common.annotations.Beta;
 
@@ -69,7 +73,6 @@ import com.google.common.annotations.Beta;
 @ThreadSafe
 public class HttpConnectionManager implements HttpConnectionManagerInterface {
 
-	@SuppressWarnings("unused")
 	private static final String TAG = HttpConnectionManager.class.getSimpleName();
 
 	/**
@@ -89,9 +92,6 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	}
 
 	private HttpConnectionManager() {
-		// set keep-alive global property (NOT NEEDED)
-		// System.setProperty("http.keepAlive", "false");
-
 		final Level logLevel = DroidConfig.DEBUG ? Level.CONFIG : Level.OFF;
 		Logger.getLogger(HttpTransport.class.getName()).setLevel(logLevel);
 	}
@@ -100,29 +100,34 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	 * Initializes the {@link HttpConnectionManager}
 	 * 
 	 * @param keepAliveStrategy
-	 *            The {@link ConnectionKeepAliveStrategy} for the default http
-	 *            client used.
+	 *            The {@link ConnectionKeepAliveStrategy} if
+	 *            {@link ApacheHttpTransport} is used.
 	 */
 	@OverridingMethodsMustInvokeSuper
 	public synchronized void initialize(@CheckForNull ConnectionKeepAliveStrategy keepAliveStrategy) {
-		/* Get the best HTTP client for the current Android version */
-		// mDefaultHttpTransport = AndroidHttp.newCompatibleTransport();
-		/*
-		 * No we don't get it anymore. ApacheHttpTransport turns out to be
-		 * incredibly faster than NetHttpTransport with HTTPS connections.
-		 * 
-		 * TODO: benchmark different HTTP client performances
-		 */
-		/* AndroidHttpClient.newInstance("Android", context) */
-		// mDefaultHttpTransport = new ApacheHttpTransport();
-		/*
-		 * Creating a custom DefaultHttpClient to set the keep alive strategy
-		 */
-		DefaultHttpClient httpClient = ApacheHttpTransport.newDefaultHttpClient();
-		if (keepAliveStrategy != null) {
-			httpClient.setKeepAliveStrategy(keepAliveStrategy);
+		// set keep-alive global property (NOT NEEDED)
+		// System.setProperty("http.keepAlive", "true");
+
+		if (DroidConfig.DEBUG) {
+			Log.d(TAG, "http.maxConnections: " + System.getProperty("http.maxConnections"));
+			Log.d(TAG, "http.keepAlive: " + System.getProperty("http.keepAlive"));
 		}
-		mDefaultHttpTransport = new ApacheHttpTransport(httpClient);
+		/*
+		 * Get the best HTTP client for the current Android version, mimicking
+		 * the behavior of the method AndroidHttp.newCompatibleTransport()
+		 */
+		if (AndroidUtils.isMinimumSdkLevel(9)) {
+			/* AndroidHttpClient.newInstance("Android", context) */
+			// use HttpURLConnection as default connection transport
+			mDefaultHttpTransport = new NetHttpTransport();
+		} else {
+			/* Use custom DefaultHttpClient to set the keep alive strategy */
+			final DefaultHttpClient httpClient = ApacheHttpTransport.newDefaultHttpClient();
+			if (keepAliveStrategy != null) {
+				httpClient.setKeepAliveStrategy(keepAliveStrategy);
+			}
+			mDefaultHttpTransport = new ApacheHttpTransport(httpClient);
+		}
 		mDefaultRequestFactory = createStandardRequestFactory(mDefaultHttpTransport);
 	}
 
