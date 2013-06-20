@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -250,6 +251,10 @@ public class DroidUtils {
 	 * 
 	 * FIXME: SMS text is not displayed in Motorola devices
 	 * 
+	 * Note: if the passed {@link Context} is not an activity, the flag
+	 * {@link Intent#FLAG_ACTIVITY_NEW_TASK} will automatically be set to avoid
+	 * an Android runtime exception.
+	 * 
 	 * @param context
 	 * @param number
 	 *            The phone number to send the SMS to
@@ -274,6 +279,10 @@ public class DroidUtils {
 			smsIntent.putExtra(SMS_BODY_EXTRA, text);
 			// Intent.EXTRA_TEXT added only as a fallback
 			smsIntent.putExtra(Intent.EXTRA_TEXT, text);
+
+			if (!(context instanceof Activity)) {
+				smsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			}
 			context.startActivity(smsIntent);
 			return true;
 		} else {
@@ -307,6 +316,10 @@ public class DroidUtils {
 			smsIntent.putExtra(SMS_BODY_EXTRA, text);
 			// Intent.EXTRA_TEXT added only as a fallback
 			smsIntent.putExtra(Intent.EXTRA_TEXT, text);
+
+			if (!(context instanceof Activity)) {
+				smsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			}
 			context.startActivity(smsIntent);
 			return true;
 		}
@@ -369,6 +382,10 @@ public class DroidUtils {
 	 * Create a chooser intent to open the email composer with the specified
 	 * email recipients, subject and message.
 	 * 
+	 * Note: if the passed {@link Context} is not an activity, the flag
+	 * {@link Intent#FLAG_ACTIVITY_NEW_TASK} will automatically be set to avoid
+	 * an Android runtime exception.
+	 * 
 	 * @param context
 	 *            The {@link Context} to start the chooser intent with
 	 * @param chooserMessage
@@ -387,7 +404,11 @@ public class DroidUtils {
 		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
 		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, message);
 		emailIntent.setType("plain/text");
-		context.startActivity(Intent.createChooser(emailIntent, chooserMessage));
+		final Intent intent = Intent.createChooser(emailIntent, chooserMessage);
+		if (!(context instanceof Activity)) {
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		}
+		context.startActivity(intent);
 	}
 
 	/**
