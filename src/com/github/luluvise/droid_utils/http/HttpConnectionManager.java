@@ -114,9 +114,12 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 		}
 		/*
 		 * Get the best HTTP client for the current Android version, mimicking
-		 * the behavior of the method AndroidHttp.newCompatibleTransport()
+		 * the behavior of the method AndroidHttp.newCompatibleTransport(). As
+		 * of now, ApacheHttpTransport appears to be much less CPU-consuming
+		 * than NetHttpTransport on Gingerbread, so we use the latter only for
+		 * API >= 11
 		 */
-		if (AndroidUtils.isMinimumSdkLevel(9)) {
+		if (AndroidUtils.isMinimumSdkLevel(11)) {
 			/* AndroidHttpClient.newInstance("Android", context) */
 			// use HttpURLConnection as default connection transport
 			mDefaultHttpTransport = new NetHttpTransport();
