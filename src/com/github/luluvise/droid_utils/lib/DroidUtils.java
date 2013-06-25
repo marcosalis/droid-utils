@@ -47,6 +47,7 @@ import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
 import com.github.luluvise.droid_utils.lib.CacheUtils.CacheLocation;
+import com.google.api.client.extensions.android.AndroidUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 
@@ -178,6 +179,16 @@ public class DroidUtils {
 	public static int getScreenSize(@Nonnull Context context) {
 		Configuration conf = context.getResources().getConfiguration();
 		return conf.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
+	}
+
+	/**
+	 * Returns whether the SDK version is the given level or higher.
+	 * 
+	 * @see android.os.Build.VERSION_CODES
+	 * @see {@link AndroidUtils#isMinimumSdkLevel(int)}
+	 */
+	public static boolean isMinimumSdkLevel(int minimumSdkLevel) {
+		return Build.VERSION.SDK_INT >= minimumSdkLevel;
 	}
 
 	/**
