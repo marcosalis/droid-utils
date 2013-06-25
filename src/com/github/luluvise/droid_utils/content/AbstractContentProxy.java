@@ -61,7 +61,7 @@ public abstract class AbstractContentProxy implements ContentProxy {
 	protected static final ExecutorService PROXY_EXECUTOR;
 
 	/**
-	 * Executor to be used by all content proxies when pre-fetching content.
+	 * Low priority executor to be used by subclasses when pre-fetching content.
 	 */
 	protected static final ExecutorService PRE_FETCH_EXECUTOR;
 

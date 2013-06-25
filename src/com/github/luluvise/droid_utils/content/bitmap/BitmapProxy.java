@@ -40,8 +40,8 @@ import com.google.common.annotations.Beta;
 
 /**
  * Abstract base class for a {@link Bitmap} content proxy. Every
- * {@link BitmapProxy} subclass owns one or more memory caches (in order to be
- * able to fine-tune the size of each of them) and a disk cache, which are
+ * {@link BitmapProxy} subclass can hold one or more (in order to be able to
+ * fine-tune the size of each of them) memory caches and a disk cache, which are
  * managed separately.
  * 
  * Every {@link BitmapProxy} shares the same executors, one for querying the

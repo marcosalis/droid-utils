@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import android.graphics.Bitmap;
@@ -59,18 +61,24 @@ class BitmapLoader implements Callable<Bitmap> {
 	 * Instantiates a {@link BitmapLoader}.
 	 * 
 	 * @param downloads
+	 *            The {@link CacheMemoizer} used to retrieve cached items
 	 * @param cache
+	 *            The {@link BitmapLruCache} where bitmaps in memory are stored
 	 * @param diskCache
-	 * @param url
+	 *            The (optional) {@link BitmapDiskCache} where bitmaps saved on
+	 *            disk are handled
+	 * @param key
+	 *            The {@link CacheUrlKey} to retrieve the bitmap
 	 * @param callback
 	 *            {@link BitmapAsyncSetter} for the image (can be null)
 	 */
-	public BitmapLoader(CacheMemoizer<String, Bitmap> downloads, BitmapLruCache<String> cache,
-			BitmapDiskCache diskCache, CacheUrlKey url, BitmapAsyncSetter callback) {
+	public BitmapLoader(@Nonnull CacheMemoizer<String, Bitmap> downloads,
+			@Nonnull BitmapLruCache<String> cache, @Nullable BitmapDiskCache diskCache,
+			@Nonnull CacheUrlKey key, @Nullable BitmapAsyncSetter callback) {
 		mDownloadsCache = downloads;
 		mCache = cache;
 		mDiskCache = diskCache;
-		mUrl = url;
+		mUrl = key;
 		mBitmapCallback = callback;
 	}
 

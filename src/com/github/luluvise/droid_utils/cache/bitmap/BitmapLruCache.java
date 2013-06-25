@@ -57,7 +57,7 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 
 	private static final String TAG = BitmapLruCache.class.getSimpleName();
 
-	private final String mName;
+	private final String mLogName;
 	private final ConcurrentMap<K, Future<Bitmap>> mDownloadsCache;
 
 	/**
@@ -65,24 +65,24 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 	 * Call {@link ActivityManager#getMemoryClass()} to properly size this cache
 	 * depending on the maximum available application memory heap.
 	 * 
-	 * @param cacheName
+	 * @param cacheLogName
 	 *            The (optional) name of the cache (for logging purposes)
 	 * @param maxSize
 	 *            The max memory occupation, in bytes, that the cache will ever
 	 *            occupy when full.
 	 * @param downloadsCache
-	 *            An (optional) {@link ConcurrentMap} that uses the same keys as
+	 *            An (optional) {@link ConcurrentMap} using the same keys as
 	 *            this {@link BitmapLruCache} to allow Bitmap entries to be
 	 *            removed when using a {@link CacheMemoizer} to populate the
-	 *            cache.
+	 *            cache, in order to avoid memory leaks and OOM.
 	 */
-	public BitmapLruCache(@Nullable String cacheName, @Nonnegative int maxSize,
+	public BitmapLruCache(@Nullable String cacheLogName, @Nonnegative int maxSize,
 			@Nullable ConcurrentMap<K, Future<Bitmap>> downloadsCache) {
 		super(maxSize);
-		mName = cacheName;
+		mLogName = cacheLogName;
 		mDownloadsCache = downloadsCache;
 		if (DroidConfig.DEBUG) {
-			Log.i(TAG, mName + ": max cache size is set to " + maxSize + " bytes");
+			Log.i(TAG, mLogName + ": max cache size is set to " + maxSize + " bytes");
 		}
 	}
 
@@ -129,7 +129,7 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 	@Override
 	public void clear() {
 		if (DroidConfig.DEBUG) {
-			Log.i(TAG, mName + " session stats: hits " + hitCount() + ", miss " + missCount());
+			Log.i(TAG, mLogName + " session stats: hits " + hitCount() + ", miss " + missCount());
 		}
 		evictAll();
 	}
@@ -151,9 +151,9 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 
 		if (DroidConfig.DEBUG) {
 			if (oldValue != null && newValue != null) {
-				Log.w(TAG, mName + ": item " + key + " replaced: this should never happen!");
+				Log.w(TAG, mLogName + ": item " + key + " replaced: this should never happen!");
 			}
-			Log.v(TAG, mName + ": item removed, cache size is now " + size() + " bytes");
+			Log.v(TAG, mLogName + ": item removed, cache size is now " + size() + " bytes");
 		}
 	}
 

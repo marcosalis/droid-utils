@@ -48,7 +48,7 @@ import com.google.common.io.Files;
  * when the device disk is running out of memory.
  * 
  * In order not to degrade UI performances when decoding a {@link Bitmap} from
- * the disk, only one decoding is allowed simultaneously.
+ * the disk, only one simultaneous decoding is permitted.
  * 
  * @since 1.0
  * @author Marco Salis
@@ -226,7 +226,6 @@ public class BitmapDiskCache extends DiskCache<Bitmap> {
 				if (!bitmapFile.delete())
 					return false;
 			}
-			// TODO: wrap in BufferedOutputStream?
 			FileOutputStream fos = new FileOutputStream(bitmapFile);
 			bitmap.compress(COMPRESS_FORMAT, COMPRESS_QUALITY, fos);
 			fos.flush();
