@@ -69,7 +69,7 @@ public class DefaultBackOffUnsuccessfulResponseHandler implements HttpUnsuccessf
 	 * 
 	 * When using this constructor, be aware that {@link BackOff} should be used
 	 * for only one request as the Google library doesn't reset it anymore. The
-	 * only exception is when either {@link BackOff} and {@link BackOffPolicy}
+	 * only exception is when either {@link BackOff} and {@link BackOffRequired}
 	 * are stateless.
 	 * 
 	 * @param backOffRequired
