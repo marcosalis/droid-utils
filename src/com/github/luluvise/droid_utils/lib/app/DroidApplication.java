@@ -302,7 +302,7 @@ public class DroidApplication extends Application {
 	protected StrictMode.ThreadPolicy getDebugCustomThreadPolicy() {
 		return new ThreadPolicy.Builder() //
 				// .detectDiskReads() // too verbose
-				.detectDiskWrites() //
+				// .detectDiskWrites() // too verbose
 				.detectNetwork() //
 				.penaltyLog() //
 				.build();
