@@ -51,6 +51,11 @@ public class CacheMemoizer<K, V> {
 
 	protected static final int INIT_CACHE_SIZE = 16;
 
+	/**
+	 * This map contains already executed, or in execution tasks from where the
+	 * memoizer will try to retrieve, concurrently, the cache item before
+	 * running a new {@link Callable}.
+	 */
 	private final ConcurrentMap<K, Future<V>> mTaskCache;
 
 	/**

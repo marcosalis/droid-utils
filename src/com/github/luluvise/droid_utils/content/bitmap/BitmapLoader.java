@@ -115,7 +115,10 @@ class BitmapLoader implements Callable<Bitmap> {
 		 */
 		final MemoizerCallable memoizer = new MemoizerCallable(mDownloadsCache, mCache, mDiskCache,
 				mUrl, mBitmapCallback);
-		BitmapProxy.submitInDownloader(memoizer);
+		// attempt prioritizing the download task if already in queue
+		BitmapProxy.moveTaskToFront(key);
+		// submit new memoizer task to downloder executor
+		BitmapProxy.submitInDownloader(key, memoizer);
 
 		return null;
 	}
@@ -125,8 +128,8 @@ class BitmapLoader implements Callable<Bitmap> {
 	 * whether there is another running and unfinished task for the Bitmap we
 	 * want to download from the server.
 	 * 
-	 * This computation gets executed within the
-	 * {@link BitmapProxy#getDownloaderExecutor()} executor.
+	 * This computation gets executed with the
+	 * {@link BitmapProxy#submitInDownloader(Callable)} method.
 	 */
 	@Immutable
 	private static class MemoizerCallable implements Callable<Bitmap> {

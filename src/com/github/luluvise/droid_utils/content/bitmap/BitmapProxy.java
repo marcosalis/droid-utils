@@ -15,9 +15,14 @@
  */
 package com.github.luluvise.droid_utils.content.bitmap;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +31,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
+import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Process;
@@ -76,16 +82,22 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 		final LinkedBlockingQueue<Runnable> executorQueue = new LinkedBlockingQueue<Runnable>();
 		final PriorityThreadFactory executorFactory = new PriorityThreadFactory(
 				"BitmapProxy executor thread", Process.THREAD_PRIORITY_BACKGROUND);
-		final ThreadPoolExecutor bitmapExecutor = new ThreadPoolExecutor(executorSize,
+		final BitmapThreadPoolExecutor bitmapExecutor = new BitmapThreadPoolExecutor(executorSize,
 				executorSize, 0L, TimeUnit.MILLISECONDS, executorQueue, executorFactory);
 		BITMAP_EXECUTOR = bitmapExecutor;
 
 		// prepare bitmaps downloader executor
-		final LinkedBlockingQueue<Runnable> downloaderQueue = new LinkedBlockingQueue<Runnable>();
+		final BlockingQueue<Runnable> downloaderQueue;
+		if (DroidUtils.isMinimumSdkLevel(9)) {
+			downloaderQueue = getBlockingDeque();
+		} else {
+			downloaderQueue = new LinkedBlockingQueue<Runnable>();
+		}
 		final PriorityThreadFactory downloaderFactory = new PriorityThreadFactory(
 				"BitmapProxy downloader executor thread", Process.THREAD_PRIORITY_DEFAULT);
-		final ThreadPoolExecutor downloaderExecutor = new ThreadPoolExecutor(dwExecutorSize,
-				dwExecutorSize, 0L, TimeUnit.MILLISECONDS, downloaderQueue, downloaderFactory);
+		final BitmapThreadPoolExecutor downloaderExecutor = new BitmapThreadPoolExecutor(
+				dwExecutorSize, dwExecutorSize, 0L, TimeUnit.MILLISECONDS, downloaderQueue,
+				downloaderFactory);
 		DOWNLOADER_EXECUTOR = downloaderExecutor;
 
 		BITMAP_EXECUTOR_Q = executorQueue;
@@ -94,14 +106,19 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 		DOWNLOAD_FUTURES = new CacheMemoizer<String, Bitmap>(dwExecutorSize);
 	}
 
+	@TargetApi(9)
+	private static LinkedBlockingDeque<Runnable> getBlockingDeque() {
+		return new LinkedBlockingDeque<Runnable>();
+	}
+
 	private static final String TAG = BitmapProxy.class.getSimpleName();
 
-	private static final ThreadPoolExecutor BITMAP_EXECUTOR;
-	private static final ThreadPoolExecutor DOWNLOADER_EXECUTOR;
+	private static final BitmapThreadPoolExecutor BITMAP_EXECUTOR;
+	private static final BitmapThreadPoolExecutor DOWNLOADER_EXECUTOR;
 
 	/* private executors blocking queues */
 	private static final LinkedBlockingQueue<Runnable> BITMAP_EXECUTOR_Q;
-	private static final LinkedBlockingQueue<Runnable> DOWNLOADER_EXECUTOR_Q;
+	private static final BlockingQueue<Runnable> DOWNLOADER_EXECUTOR_Q;
 
 	/**
 	 * {@link CacheMemoizer} used for loading Bitmaps from the cache.
@@ -121,12 +138,31 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 	/**
 	 * Executes a callable task in the bitmap downloader thread pool.
 	 * 
+	 * @param key
 	 * @param callable
 	 *            The {@link Callable} to execute (must be non null)
 	 */
-	public static synchronized final Future<Bitmap> submitInDownloader(
+	public static synchronized final Future<Bitmap> submitInDownloader(@Nonnull String key,
 			@Nonnull Callable<Bitmap> callable) {
-		return DOWNLOADER_EXECUTOR.submit(callable);
+		if (DroidUtils.isMinimumSdkLevel(9)) {
+			return DOWNLOADER_EXECUTOR.submitWithKey(key, callable);
+		} else {
+			return DOWNLOADER_EXECUTOR.submit(callable);
+		}
+	}
+
+	/**
+	 * Attempts to prioritize a bitmap download by moving to the top of the
+	 * executor queue the task with the passed key, if it exists.
+	 * 
+	 * @param key
+	 *            The string key corresponding to the bitmap
+	 */
+	@Beta
+	public static synchronized final void moveTaskToFront(@Nonnull String key) {
+		if (DroidUtils.isMinimumSdkLevel(9)) {
+			DOWNLOADER_EXECUTOR.moveToFront(key);
+		}
 	}
 
 	/**
@@ -135,6 +171,7 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 	public static synchronized final void clearBitmapExecutors() {
 		BITMAP_EXECUTOR_Q.clear();
 		DOWNLOADER_EXECUTOR_Q.clear();
+		DOWNLOADER_EXECUTOR.clearKeysMap();
 
 		if (DroidConfig.DEBUG) {
 			Log.d(TAG, "Bitmap executors tasks cleared");
@@ -147,6 +184,7 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 
 	@Override
 	public void onEntryRemoved(boolean evicted, String key, Bitmap value) {
+		// remove evicted bitmaps from the downloads memoizer to allow GC
 		DOWNLOAD_FUTURES.remove(key);
 	}
 
@@ -167,7 +205,7 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 	 * @param action
 	 *            The {@link ActionType} to perform, one of
 	 *            {@link ActionType#NORMAL} or {@link ActionType#PRE_FETCH}
-	 * @param callback
+	 * @param setter
 	 *            The {@link BitmapAsyncSetter} to set the bitmap in an
 	 *            {@link ImageView}. Can be null with
 	 *            {@link ActionType#PRE_FETCH}
@@ -179,7 +217,7 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 	@CheckForNull
 	protected Future<Bitmap> getBitmap(@Nonnull BitmapLruCache<String> cache,
 			@Nullable BitmapDiskCache diskCache, @Nonnull CacheUrlKey url,
-			@Nullable ActionType action, BitmapAsyncSetter callback,
+			@Nullable ActionType action, BitmapAsyncSetter setter,
 			@CheckForNull Drawable placeholder) {
 		final boolean preFetch = (action == ActionType.PRE_FETCH);
 		Bitmap bitmap;
@@ -191,20 +229,20 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 				 * This is supposed to be called from the UI thread and be
 				 * synchronous.
 				 */
-				callback.setBitmapSync(bitmap);
+				setter.setBitmapSync(bitmap);
 			}
 			return null; // no Future to return
 		} else {
 			if (!preFetch) {
 				// set temporary placeholder if we are not just pre-fetching
 				if (placeholder != null) {
-					callback.setPlaceholderSync(placeholder);
+					setter.setPlaceholderSync(placeholder);
 				}
 			} else {
-				callback = null; // make sure there's no callback
+				setter = null; // make sure there's no callback
 			}
 			return BITMAP_EXECUTOR.submit(new BitmapLoader(DOWNLOAD_FUTURES, cache, diskCache, url,
-					callback));
+					setter));
 		}
 	}
 
@@ -217,6 +255,95 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 	protected Future<Bitmap> getBitmap(BitmapLruCache<String> cache, BitmapDiskCache diskCache,
 			CacheUrlKey url, ActionType action, BitmapAsyncSetter callback) {
 		return getBitmap(cache, diskCache, url, action, callback, null);
+	}
+
+	/**
+	 * Thread pool based on {@link ThreadPoolExecutor} to manage manage the
+	 * runnables queue in order to be able to move tasks to its front when
+	 * needed.
+	 * 
+	 * This is useful, for example, when loading many bitmaps from the network
+	 * in a long list, and we want to be able to re-arrange the downloads
+	 * priorities when the user scrolls the list.
+	 * 
+	 * {@link #submitWithKey(String, Callable)} and {@link #moveToFront(String)}
+	 * must only be called from API >= 8.
+	 * 
+	 * @since 1.0
+	 * @author Marco Salis
+	 */
+	private static class BitmapThreadPoolExecutor extends ThreadPoolExecutor {
+
+		private final ConcurrentHashMap<String, Runnable> mRunnablesMap;
+
+		// superclass constructor
+		public BitmapThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime,
+				TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
+			super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+			mRunnablesMap = new ConcurrentHashMap<String, Runnable>();
+		}
+
+		@Nonnull
+		@TargetApi(9)
+		public Future<Bitmap> submitWithKey(@Nonnull String key, @Nonnull Callable<Bitmap> callable) {
+			// mimics newTaskFor() behavior to provide a custom RunnableFuture
+			final KeyedFutureTask<Bitmap> runnable = new KeyedFutureTask<Bitmap>(key, callable);
+			mRunnablesMap.put(key, runnable); // O(1)
+			execute(runnable);
+			return runnable;
+		}
+
+		@TargetApi(9)
+		public void moveToFront(@Nonnull String key) {
+			final Runnable runnable = mRunnablesMap.get(key); // O(1)
+			if (runnable != null) {
+				if (DOWNLOADER_EXECUTOR_Q instanceof LinkedBlockingDeque) {
+					final LinkedBlockingDeque<Runnable> blockingDeque = (LinkedBlockingDeque<Runnable>) DOWNLOADER_EXECUTOR_Q;
+					/*
+					 * the Runnable is removed from the executor queue so it's
+					 * safe to add it back: we don't risk double running it.
+					 * removeLastOccurrence() has linear complexity, however we
+					 * assume that the advantages of bringing the runnable on
+					 * top of the queue overtake this drawback in a relatively
+					 * small queue.
+					 */
+					if (blockingDeque.removeLastOccurrence(runnable)) { // O(n)
+						blockingDeque.offerFirst(runnable); // O(1)
+						if (DroidConfig.DEBUG) {
+							Log.v(TAG, "Bringing bitmap task to front for: " + key);
+						}
+					}
+				}
+			}
+		}
+
+		public void clearKeysMap() {
+			if (DroidConfig.DEBUG) {
+				Log.d(TAG, "Clearing runnables key map, contains " + mRunnablesMap.size() + " keys");
+			}
+			mRunnablesMap.clear();
+		}
+
+		@Override
+		protected void afterExecute(Runnable r, Throwable t) {
+			super.afterExecute(r, t);
+			if (r instanceof KeyedFutureTask) {
+				mRunnablesMap.remove(((KeyedFutureTask<?>) r).key, r);
+			}
+		}
+
+		/**
+		 * Extension of {@link FutureTask} that allows setting a string key
+		 */
+		private static class KeyedFutureTask<V> extends FutureTask<V> {
+
+			public final String key;
+
+			public KeyedFutureTask(@Nonnull String key, @Nonnull Callable<V> callable) {
+				super(callable);
+				this.key = key;
+			}
+		}
 	}
 
 }
