@@ -22,8 +22,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.annotation.concurrent.Immutable;
 
+import android.os.Process;
+
+import com.github.luluvise.droid_utils.concurrent.PriorityThreadFactory;
 import com.github.luluvise.droid_utils.lib.DroidUtils;
-import com.github.luluvise.droid_utils.logging.LoggedThreadFactory;
 import com.google.common.annotations.Beta;
 
 /**
@@ -45,14 +47,16 @@ public abstract class AbstractContentProxy implements ContentProxy {
 		final int prefetchSize = (int) Math.ceil((double) executorSize / 2);
 
 		PROXY_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				executorSize, new LoggedThreadFactory("Proxy executor")));
+				executorSize, new PriorityThreadFactory("Proxy executor")));
 
 		PRE_FETCH_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				prefetchSize, new LoggedThreadFactory("Proxy pre-fetch", Thread.MIN_PRIORITY)));
+				prefetchSize,
+				new PriorityThreadFactory("Proxy pre-fetch", Process.THREAD_PRIORITY_BACKGROUND
+						+ Process.THREAD_PRIORITY_LESS_FAVORABLE)));
 
 		LOW_PRIORITY_EXECUTOR = Executors.unconfigurableExecutorService(Executors
-				.newSingleThreadExecutor(new LoggedThreadFactory("Low priority executor",
-						Thread.MIN_PRIORITY)));
+				.newSingleThreadExecutor(new PriorityThreadFactory("Low priority executor",
+						Process.THREAD_PRIORITY_LOWEST)));
 	}
 
 	/**

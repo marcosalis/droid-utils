@@ -33,13 +33,13 @@ import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 
 import com.github.luluvise.droid_utils.annotations.NotForUIThread;
+import com.github.luluvise.droid_utils.concurrent.PriorityThreadFactory;
 import com.github.luluvise.droid_utils.http.HttpConnectionManager;
 import com.github.luluvise.droid_utils.http.HttpConnectionManagerInterface;
 import com.github.luluvise.droid_utils.json.jackson.JacksonJsonManager;
 import com.github.luluvise.droid_utils.json.jackson.JacksonObjectParser;
 import com.github.luluvise.droid_utils.json.model.JsonModel;
 import com.github.luluvise.droid_utils.lib.HashUtils;
-import com.github.luluvise.droid_utils.logging.LoggedThreadFactory;
 import com.google.api.client.http.HttpMethods;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
@@ -99,7 +99,7 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 
 		REQUESTS_EXECUTOR = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(
 				CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE, TimeUnit.SECONDS, poolWorkQueue,
-				new LoggedThreadFactory("AbstractModelRequest executor thread")));
+				new PriorityThreadFactory("AbstractModelRequest executor thread")));
 	}
 
 	/* default components for HTTP requests and JSON parsing */

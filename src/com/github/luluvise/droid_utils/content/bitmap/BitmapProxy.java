@@ -27,6 +27,7 @@ import javax.annotation.concurrent.Immutable;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.os.Process;
 import android.widget.ImageView;
 
 import com.github.luluvise.droid_utils.cache.CacheMemoizer;
@@ -34,9 +35,9 @@ import com.github.luluvise.droid_utils.cache.ContentCache.OnEntryRemovedListener
 import com.github.luluvise.droid_utils.cache.bitmap.BitmapDiskCache;
 import com.github.luluvise.droid_utils.cache.bitmap.BitmapLruCache;
 import com.github.luluvise.droid_utils.cache.keys.CacheUrlKey;
+import com.github.luluvise.droid_utils.concurrent.PriorityThreadFactory;
 import com.github.luluvise.droid_utils.content.AbstractContentProxy;
 import com.github.luluvise.droid_utils.lib.DroidUtils;
-import com.github.luluvise.droid_utils.logging.LoggedThreadFactory;
 import com.google.common.annotations.Beta;
 
 /**
@@ -69,9 +70,11 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 		final int dwExecutorSize = DroidUtils.getIOBoundPoolSize();
 
 		BITMAP_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				executorSize, new LoggedThreadFactory("BitmapProxy executor thread")));
+				executorSize, new PriorityThreadFactory("BitmapProxy executor thread",
+						Process.THREAD_PRIORITY_BACKGROUND)));
 		DOWNLOADER_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				dwExecutorSize, new LoggedThreadFactory("BitmapProxy downloader executor thread")));
+				dwExecutorSize, new PriorityThreadFactory("BitmapProxy downloader executor thread",
+						Process.THREAD_PRIORITY_DEFAULT)));
 		DOWNLOAD_FUTURES = new CacheMemoizer<String, Bitmap>(dwExecutorSize);
 	}
 
