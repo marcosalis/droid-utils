@@ -115,7 +115,7 @@ class BitmapLoader implements Callable<Bitmap> {
 		 */
 		final MemoizerCallable memoizer = new MemoizerCallable(mDownloadsCache, mCache, mDiskCache,
 				mUrl, mBitmapCallback);
-		BitmapProxy.getDownloaderExecutor().submit(memoizer);
+		BitmapProxy.submitInDownloader(memoizer);
 
 		return null;
 	}
