@@ -30,6 +30,7 @@ import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
 import com.github.luluvise.droid_utils.cache.CacheMemoizer;
+import com.github.luluvise.droid_utils.cache.ContentCache.OnEntryRemovedListener;
 import com.github.luluvise.droid_utils.cache.bitmap.BitmapDiskCache;
 import com.github.luluvise.droid_utils.cache.bitmap.BitmapLruCache;
 import com.github.luluvise.droid_utils.cache.keys.CacheUrlKey;
@@ -58,7 +59,8 @@ import com.google.common.annotations.Beta;
  */
 @Beta
 @Immutable
-public abstract class BitmapProxy extends AbstractContentProxy {
+public abstract class BitmapProxy extends AbstractContentProxy implements
+		OnEntryRemovedListener<String, Bitmap> {
 
 	static {
 		// here we query memory and disk caches and set bitmaps into views
@@ -96,7 +98,12 @@ public abstract class BitmapProxy extends AbstractContentProxy {
 	/**
 	 * {@link CacheMemoizer} used for loading Bitmaps from the cache.
 	 */
-	protected static final CacheMemoizer<String, Bitmap> DOWNLOAD_FUTURES;
+	private static final CacheMemoizer<String, Bitmap> DOWNLOAD_FUTURES;
+
+	@Override
+	public void onEntryRemoved(boolean evicted, String key, Bitmap value) {
+		DOWNLOAD_FUTURES.remove(key);
+	}
 
 	/**
 	 * Method to be called by subclasses to get a bitmap content from any

@@ -15,9 +15,7 @@
  */
 package com.github.luluvise.droid_utils.cache.bitmap;
 
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Future;
-
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -57,8 +55,10 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 
 	private static final String TAG = BitmapLruCache.class.getSimpleName();
 
+	@CheckForNull
 	private final String mLogName;
-	private final ConcurrentMap<K, Future<Bitmap>> mDownloadsCache;
+	@CheckForNull
+	private final OnEntryRemovedListener<K, Bitmap> mEntryRemovedListener;
 
 	/**
 	 * Constructor for a BitmapCache.<br>
@@ -70,17 +70,17 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 	 * @param maxSize
 	 *            The max memory occupation, in bytes, that the cache will ever
 	 *            occupy when full.
-	 * @param downloadsCache
-	 *            An (optional) {@link ConcurrentMap} using the same keys as
-	 *            this {@link BitmapLruCache} to allow Bitmap entries to be
-	 *            removed when using a {@link CacheMemoizer} to populate the
-	 *            cache, in order to avoid memory leaks and OOM.
+	 * @param listener
+	 *            An (optional) {@link OnEntryRemovedListener} to allow Bitmap
+	 *            entries to be removed when using another component that keeps
+	 *            references to them (such as a {@link CacheMemoizer} to
+	 *            populate the cache), in order to avoid memory leaks and OOM.
 	 */
 	public BitmapLruCache(@Nullable String cacheLogName, @Nonnegative int maxSize,
-			@Nullable ConcurrentMap<K, Future<Bitmap>> downloadsCache) {
+			@Nullable OnEntryRemovedListener<K, Bitmap> listener) {
 		super(maxSize);
 		mLogName = cacheLogName;
-		mDownloadsCache = downloadsCache;
+		mEntryRemovedListener = listener;
 		if (DroidConfig.DEBUG) {
 			Log.i(TAG, mLogName + ": max cache size is set to " + maxSize + " bytes");
 		}
@@ -114,7 +114,8 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 	 *         indicate that the map previously associated null with the key, if
 	 *         the implementation supports null values.)
 	 */
-	public synchronized Bitmap putIfAbsent(K key, Bitmap value) {
+	@CheckForNull
+	public synchronized Bitmap putIfAbsent(@Nonnull K key, Bitmap value) {
 		Bitmap old = null;
 		if ((old = get(key)) == null) {
 			return put(key, value);
@@ -145,8 +146,8 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 	protected void entryRemoved(boolean evicted, K key, Bitmap oldValue, Bitmap newValue) {
 		super.entryRemoved(evicted, key, oldValue, newValue);
 		// remove evicted Bitmap task from the downloads cache if exists
-		if (mDownloadsCache != null) {
-			mDownloadsCache.remove(key);
+		if (mEntryRemovedListener != null) {
+			mEntryRemovedListener.onEntryRemoved(evicted, key, oldValue);
 		}
 
 		if (DroidConfig.DEBUG) {
