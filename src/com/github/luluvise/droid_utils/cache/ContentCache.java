@@ -44,6 +44,7 @@ public interface ContentCache<K, V> {
 	 * 
 	 * @since 1.0
 	 */
+	@Beta
 	public interface OnEntryRemovedListener<K, V> {
 
 		/**

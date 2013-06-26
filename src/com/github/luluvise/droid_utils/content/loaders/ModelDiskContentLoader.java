@@ -59,9 +59,9 @@ import com.google.common.annotations.Beta;
  * immediately<br>
  * 
  * @param <R>
- *            Requests extending {@link AbstractModelRequest}
+ *            Requests type (extending {@link AbstractModelRequest})
  * @param <M>
- *            Models extending {@link JsonModel}
+ *            Models type (extending {@link JsonModel})
  * 
  * @since 1.0
  * @author Marco Salis
@@ -114,8 +114,8 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 	 *      ContentUpdateCallback)
 	 */
 	@Override
-	public M load(ActionType action, AbstractModelRequest<M> request,
-			ContentUpdateCallback<M> callback) throws Exception {
+	public M load(@Nullable ActionType action, @Nonnull AbstractModelRequest<M> request,
+			@Nullable ContentUpdateCallback<M> callback) throws Exception {
 		// TODO: improve this, it's almost procedural
 
 		// if network is not active, turn every action to CACHE_ONLY
@@ -217,8 +217,9 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 		@Nullable
 		private final ContentUpdateCallback<M> mUpdateCallback;
 
-		public IOContentLoader(ActionType action, AbstractModelRequest<M> request,
-				ContentUpdateCallback<M> callback) {
+		public IOContentLoader(@Nonnull ActionType action,
+				@Nonnull AbstractModelRequest<M> request,
+				@Nullable ContentUpdateCallback<M> callback) {
 			mAction = action;
 			mRequest = request;
 			mUpdateCallback = callback;
