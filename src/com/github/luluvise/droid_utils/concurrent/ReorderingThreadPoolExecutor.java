@@ -30,6 +30,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.Nonnull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
+import javax.annotation.concurrent.GuardedBy;
+import javax.annotation.concurrent.ThreadSafe;
 
 import android.annotation.TargetApi;
 import android.util.Log;
@@ -61,7 +63,10 @@ import com.google.common.annotations.Beta;
  * Note that this executor is specifically developed to be used when task
  * reordering is crucial for performances. In all other cases, expecially in
  * case of very long task queues, {@link ReorderingThreadPoolExecutor} can be
- * significantly slower than its superclass.
+ * significantly slower than its superclass. Futhermore, always remember to
+ * explicitly call {@link #purge()} from time to time when cancelling
+ * {@link Future}s for tasks that have been submitted to this executor in order
+ * to not pollute the internal map with cancelled tasks.
  * 
  * @since 1.0
  * @author Marco Salis
@@ -75,6 +80,7 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 	private static final String TAG = ReorderingThreadPoolExecutor.class.getSimpleName();
 
 	private final BlockingQueue<Runnable> mQueueRef;
+	@GuardedBy("mMapLock")
 	private final ConcurrentHashMap<K, KeyHoldingFutureTask<K, ?>> mRunnablesMap;
 	private final ReentrantReadWriteLock mMapLock;
 
@@ -155,8 +161,8 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 		if (DroidConfig.DEBUG) {
 			Log.d(TAG, "Clearing runnables key map, contains " + mRunnablesMap.size() + " keys");
 		}
+		mMapLock.writeLock().lock();
 		try {
-			mMapLock.writeLock().lock();
 			// we add a write lock here as we don't want other threads to add
 			// tasks here while the map is cleared
 			mRunnablesMap.clear();
@@ -168,8 +174,8 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 	@Override
 	@OverridingMethodsMustInvokeSuper
 	public void purge() {
+		mMapLock.writeLock().lock(); // write lock
 		try {
-			mMapLock.writeLock().lock(); // write lock
 			// remove cancelled runnables from the keys map
 			final Collection<KeyHoldingFutureTask<K, ?>> runnables = mRunnablesMap.values();
 			for (KeyHoldingFutureTask<K, ?> r : runnables) {
@@ -195,7 +201,12 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 	protected void afterExecute(Runnable r, Throwable t) {
 		super.afterExecute(r, t);
 		if (r instanceof KeyHoldingFutureTask) {
-			mRunnablesMap.remove(((KeyHoldingFutureTask<?, ?>) r).key, r);
+			mMapLock.readLock().lock(); // read lock
+			try {
+				mRunnablesMap.remove(((KeyHoldingFutureTask<?, ?>) r).key, r);
+			} finally {
+				mMapLock.readLock().unlock();
+			}
 		}
 	}
 
@@ -220,6 +231,7 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 	/**
 	 * Extension of {@link FutureTask} which just allows setting a key
 	 */
+	@ThreadSafe
 	private static class KeyHoldingFutureTask<K, V> extends FutureTask<V> {
 
 		public final K key;
