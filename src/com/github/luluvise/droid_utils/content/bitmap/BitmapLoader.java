@@ -116,7 +116,7 @@ class BitmapLoader implements Callable<Bitmap> {
 		final MemoizerCallable memoizer = new MemoizerCallable(mDownloadsCache, mCache, mDiskCache,
 				mUrl, mBitmapCallback);
 		// attempt prioritizing the download task if already in queue
-		BitmapProxy.moveTaskToFront(key);
+		BitmapProxy.moveDownloadToFront(key);
 		// submit new memoizer task to downloder executor
 		BitmapProxy.submitInDownloader(key, memoizer);
 
@@ -195,8 +195,7 @@ class BitmapLoader implements Callable<Bitmap> {
 		public Bitmap call() throws IOException {
 			final String key = mKey.hash();
 			Bitmap bitmap = null;
-			byte[] imageBytes;
-			imageBytes = ByteArrayDownloader.downloadByteArray(mKey.getUrl());
+			final byte[] imageBytes = ByteArrayDownloader.downloadByteArray(mKey.getUrl());
 			if (imageBytes != null) { // download successful
 				bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
 				if (bitmap != null) { // decoding successful
