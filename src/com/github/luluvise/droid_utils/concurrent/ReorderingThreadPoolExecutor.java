@@ -63,7 +63,7 @@ import com.google.common.annotations.Beta;
  * Note that this executor is specifically developed to be used when task
  * reordering is crucial for performances. In all other cases, expecially in
  * case of very long task queues, {@link ReorderingThreadPoolExecutor} can be
- * significantly slower than its superclass. Futhermore, always remember to
+ * significantly slower than its superclass. Furthermore, always remember to
  * explicitly call {@link #purge()} from time to time when cancelling
  * {@link Future}s for tasks that have been submitted to this executor in order
  * to not pollute the internal map with cancelled tasks.
@@ -105,6 +105,7 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 
 	@Nonnull
 	@TargetApi(9)
+	@NotForUIThread
 	public <T> Future<T> submitWithKey(@Nonnull K key, @Nonnull Callable<T> callable) {
 		if (DroidUtils.isMinimumSdkLevel(9)) {
 			// mimics newTaskFor() behavior to provide a custom RunnableFuture
@@ -156,6 +157,7 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 		}
 	}
 
+	@NotForUIThread
 	@OverridingMethodsMustInvokeSuper
 	public void clearKeysMap() {
 		if (DroidConfig.DEBUG) {
@@ -173,6 +175,21 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 
 	@Override
 	@OverridingMethodsMustInvokeSuper
+	protected void afterExecute(Runnable r, Throwable t) {
+		super.afterExecute(r, t);
+		if (r instanceof KeyHoldingFutureTask) {
+			mMapLock.readLock().lock(); // read lock
+			try {
+				mRunnablesMap.remove(((KeyHoldingFutureTask<?, ?>) r).key, r);
+			} finally {
+				mMapLock.readLock().unlock();
+			}
+		}
+	}
+
+	@Override
+	@NotForUIThread
+	@OverridingMethodsMustInvokeSuper
 	public void purge() {
 		mMapLock.writeLock().lock(); // write lock
 		try {
@@ -180,7 +197,7 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 			final Collection<KeyHoldingFutureTask<K, ?>> runnables = mRunnablesMap.values();
 			for (KeyHoldingFutureTask<K, ?> r : runnables) {
 				if (r.isCancelled()) {
-					runnables.remove(r);
+					runnables.remove(r); // supposedly O(1)
 				}
 			}
 		} finally {
@@ -194,20 +211,6 @@ public class ReorderingThreadPoolExecutor<K> extends ThreadPoolExecutor {
 	protected void terminated() {
 		clearKeysMap(); // clear keys map when terminated
 		super.terminated();
-	}
-
-	@Override
-	@OverridingMethodsMustInvokeSuper
-	protected void afterExecute(Runnable r, Throwable t) {
-		super.afterExecute(r, t);
-		if (r instanceof KeyHoldingFutureTask) {
-			mMapLock.readLock().lock(); // read lock
-			try {
-				mRunnablesMap.remove(((KeyHoldingFutureTask<?, ?>) r).key, r);
-			} finally {
-				mMapLock.readLock().unlock();
-			}
-		}
 	}
 
 	/**

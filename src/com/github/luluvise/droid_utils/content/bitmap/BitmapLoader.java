@@ -16,7 +16,12 @@
 package com.github.luluvise.droid_utils.content.bitmap;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -25,7 +30,9 @@ import javax.annotation.concurrent.Immutable;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
+import com.github.luluvise.droid_utils.DroidConfig;
 import com.github.luluvise.droid_utils.cache.CacheMemoizer;
 import com.github.luluvise.droid_utils.cache.bitmap.BitmapDiskCache;
 import com.github.luluvise.droid_utils.cache.bitmap.BitmapLruCache;
@@ -48,7 +55,6 @@ import com.google.common.annotations.Beta;
 @Immutable
 class BitmapLoader implements Callable<Bitmap> {
 
-	@SuppressWarnings("unused")
 	private static final String TAG = BitmapLoader.class.getSimpleName();
 
 	private final CacheMemoizer<String, Bitmap> mDownloadsCache;
@@ -172,10 +178,17 @@ class BitmapLoader implements Callable<Bitmap> {
 
 	/**
 	 * Bitmap cache task that effectively downloads a Bitmap from the network
-	 * when needed.
+	 * when needed. When debugging is active, it also handles some
+	 * instrumentation and logs some statistics about the download.
 	 */
 	@Immutable
 	private static class DownloaderCallable implements Callable<Bitmap> {
+
+		// for logging purposes only
+		private static final Set<String> downloaderStats = Collections
+				.synchronizedSet(new HashSet<String>());
+		static final AtomicLong downloaderTimer = new AtomicLong();
+		static final AtomicInteger downloaderCounter = new AtomicInteger();
 
 		private final BitmapLruCache<String> mCache;
 		private final BitmapDiskCache mDiskCache;
@@ -194,11 +207,27 @@ class BitmapLoader implements Callable<Bitmap> {
 		@CheckForNull
 		public Bitmap call() throws IOException {
 			final String key = mKey.hash();
+			final String url = mKey.getUrl();
 			Bitmap bitmap = null;
-			final byte[] imageBytes = ByteArrayDownloader.downloadByteArray(mKey.getUrl());
+
+			long startDownload = 0;
+			if (DroidConfig.DEBUG) {
+				startDownload = System.currentTimeMillis();
+			}
+
+			final byte[] imageBytes = ByteArrayDownloader.downloadByteArray(url);
+
+			long endDownload = 0;
+			long endDecoding = 0;
+			if (DroidConfig.DEBUG) {
+				endDownload = System.currentTimeMillis();
+			}
 			if (imageBytes != null) { // download successful
 				bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
 				if (bitmap != null) { // decoding successful
+					if (DroidConfig.DEBUG) {
+						endDecoding = System.currentTimeMillis();
+					}
 					mCache.put(key, bitmap);
 					if (mBitmapCallback != null) {
 						mBitmapCallback.onBitmapReceived(mKey, bitmap, BitmapSource.NETWORK);
@@ -208,8 +237,32 @@ class BitmapLoader implements Callable<Bitmap> {
 					}
 				}
 			}
+			if (DroidConfig.DEBUG) { // logging download statistics
+				if (bitmap != null) {
+					final long downloadTime = endDownload - startDownload;
+					downloaderTimer.addAndGet(downloadTime);
+					downloaderCounter.incrementAndGet();
+					Log.d(TAG, key + " download took ms " + downloadTime);
+					Log.v(TAG, key + " decoding took ms " + (endDecoding - endDownload));
+					if (!downloaderStats.add(key)) {
+						// bitmap was already downloaded!
+						Log.w(TAG, "Downloading bitmap twice: " + url);
+					}
+				}
+			}
 			return bitmap;
 		}
+	}
+
+	// for debugging purposes only
+	static void clearStatsLog() {
+		final AtomicInteger counter = DownloaderCallable.downloaderCounter;
+		final AtomicLong timer = DownloaderCallable.downloaderTimer;
+		final long averageMs = timer.get() / counter.get();
+		Log.i(TAG, counter.get() + " bitmaps downloaded in average ms " + averageMs);
+		DownloaderCallable.downloaderStats.clear();
+		timer.set(0);
+		counter.set(0);
 	}
 
 }

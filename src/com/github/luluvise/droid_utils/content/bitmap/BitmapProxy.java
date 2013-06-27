@@ -168,6 +168,7 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 		DOWNLOADER_EXECUTOR.clearKeysMap();
 
 		if (DroidConfig.DEBUG) {
+			BitmapLoader.clearStatsLog();
 			Log.d(TAG, "Bitmap executors tasks cleared");
 			Log.v(TAG, "Bitmap executor tasks: " + BITMAP_EXECUTOR.getTaskCount() + ", completed: "
 					+ BITMAP_EXECUTOR.getCompletedTaskCount());
