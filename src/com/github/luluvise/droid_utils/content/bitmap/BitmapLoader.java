@@ -48,6 +48,9 @@ import com.google.common.annotations.Beta;
  * If the mode set for the request is {@link ActionType#PRE_FETCH}, the
  * retrieved image is only downloaded and put in the memory cache if necessary.
  * 
+ * FIXME: some tests showed that, very rarely, two threads can get to download
+ * the same bitmap twice: investigate this
+ * 
  * @since 1.0
  * @author Marco Salis
  */
@@ -189,6 +192,7 @@ class BitmapLoader implements Callable<Bitmap> {
 				.synchronizedSet(new HashSet<String>());
 		static final AtomicLong downloaderTimer = new AtomicLong();
 		static final AtomicInteger downloaderCounter = new AtomicInteger();
+		static final AtomicInteger failuresCounter = new AtomicInteger();
 
 		private final BitmapLruCache<String> mCache;
 		private final BitmapDiskCache mDiskCache;
@@ -218,16 +222,27 @@ class BitmapLoader implements Callable<Bitmap> {
 			final byte[] imageBytes = ByteArrayDownloader.downloadByteArray(url);
 
 			long endDownload = 0;
-			long endDecoding = 0;
 			if (DroidConfig.DEBUG) {
 				endDownload = System.currentTimeMillis();
 			}
 			if (imageBytes != null) { // download successful
 				bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
 				if (bitmap != null) { // decoding successful
-					if (DroidConfig.DEBUG) {
-						endDecoding = System.currentTimeMillis();
-					}
+
+					if (DroidConfig.DEBUG) { // debugging
+						final long endDecoding = System.currentTimeMillis();
+						// logging download statistics
+						final long downloadTime = endDownload - startDownload;
+						downloaderTimer.addAndGet(downloadTime);
+						downloaderCounter.incrementAndGet();
+						Log.d(TAG, key + " download took ms " + downloadTime);
+						Log.v(TAG, key + " decoding took ms " + (endDecoding - endDownload));
+						if (!downloaderStats.add(key)) {
+							// bitmap was already downloaded!
+							Log.w(TAG, "Downloading bitmap twice: " + url);
+						}
+					} // end debugging
+
 					mCache.put(key, bitmap);
 					if (mBitmapCallback != null) {
 						mBitmapCallback.onBitmapReceived(mKey, bitmap, BitmapSource.NETWORK);
@@ -236,18 +251,9 @@ class BitmapLoader implements Callable<Bitmap> {
 						mDiskCache.put(key, imageBytes);
 					}
 				}
-			}
-			if (DroidConfig.DEBUG) { // logging download statistics
-				if (bitmap != null) {
-					final long downloadTime = endDownload - startDownload;
-					downloaderTimer.addAndGet(downloadTime);
-					downloaderCounter.incrementAndGet();
-					Log.d(TAG, key + " download took ms " + downloadTime);
-					Log.v(TAG, key + " decoding took ms " + (endDecoding - endDownload));
-					if (!downloaderStats.add(key)) {
-						// bitmap was already downloaded!
-						Log.w(TAG, "Downloading bitmap twice: " + url);
-					}
+			} else { // download failed
+				if (DroidConfig.DEBUG) {
+					failuresCounter.incrementAndGet();
 				}
 			}
 			return bitmap;
@@ -256,15 +262,21 @@ class BitmapLoader implements Callable<Bitmap> {
 
 	// for debugging purposes only
 	static void clearStatsLog() {
-		final AtomicInteger counter = DownloaderCallable.downloaderCounter;
 		final AtomicLong timer = DownloaderCallable.downloaderTimer;
+		final AtomicInteger counter = DownloaderCallable.downloaderCounter;
+		final AtomicInteger failures = DownloaderCallable.failuresCounter;
 		final int counterInt = counter.get();
+		final int failuresInt = failures.get();
 		final long averageMs = (counterInt != 0) ? timer.get() / counterInt : 0;
-		Log.i(TAG, counterInt + " bitmaps downloaded in average ms " + averageMs);
+		final int failuresPerc = (counterInt != 0) ? (int) (100 / (float) counterInt) * failuresInt
+				: 0;
+		Log.i(TAG, counterInt + " bitmaps downloaded in average ms " + averageMs + " - "
+				+ failuresPerc + "% failures");
 		// reset stats
 		DownloaderCallable.downloaderStats.clear();
 		timer.set(0);
 		counter.set(0);
+		failures.set(0);
 	}
 
 }

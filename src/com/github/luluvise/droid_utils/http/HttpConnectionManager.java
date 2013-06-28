@@ -30,7 +30,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import android.util.Log;
 
 import com.github.luluvise.droid_utils.DroidConfig;
-import com.google.api.client.extensions.android.AndroidUtils;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
@@ -38,7 +37,6 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.apache.ApacheHttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.common.annotations.Beta;
 
@@ -119,19 +117,35 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 		 * than NetHttpTransport on Gingerbread, so we use the latter only for
 		 * API >= 11
 		 */
-		if (AndroidUtils.isMinimumSdkLevel(11)) {
-			/* AndroidHttpClient.newInstance("Android", context) */
-			// use HttpURLConnection as default connection transport
-			mDefaultHttpTransport = new NetHttpTransport();
-		} else {
-			/* Use custom DefaultHttpClient to set the keep alive strategy */
-			final DefaultHttpClient httpClient = ApacheHttpTransport.newDefaultHttpClient();
-			if (keepAliveStrategy != null) {
-				httpClient.setKeepAliveStrategy(keepAliveStrategy);
-			}
-			mDefaultHttpTransport = new ApacheHttpTransport(httpClient);
+		/*
+		 * NOPE: still turns out that Apache is incredibly (sometimes x2) faster
+		 * than NetHttpTransport with HTTPS. TODO: investigate more?
+		 */
+		// if (AndroidUtils.isMinimumSdkLevel(11)) {
+		/* AndroidHttpClient.newInstance("Android", context) */
+		// use HttpURLConnection as default connection transport
+		// mDefaultHttpTransport = new NetHttpTransport();
+		// } else {
+		/* Use custom DefaultHttpClient to set the keep alive strategy */
+		final DefaultHttpClient httpClient = ApacheHttpTransport.newDefaultHttpClient();
+		if (keepAliveStrategy != null) {
+			httpClient.setKeepAliveStrategy(keepAliveStrategy);
 		}
+		mDefaultHttpTransport = new ApacheHttpTransport(httpClient);
+		// }
 		mDefaultRequestFactory = createStandardRequestFactory(mDefaultHttpTransport);
+	}
+
+	/**
+	 * ONLY FOR TESTING PURPOSES<br>
+	 * Inject a custom {@link HttpTransport} inside the manager
+	 * 
+	 * @param transport
+	 *            The {@link HttpTransport} to inject
+	 */
+	synchronized void injectTransport(@Nonnull HttpTransport transport) {
+		mDefaultHttpTransport = transport;
+		mDefaultRequestFactory = createStandardRequestFactory(transport);
 	}
 
 	/**
