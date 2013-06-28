@@ -258,8 +258,10 @@ class BitmapLoader implements Callable<Bitmap> {
 	static void clearStatsLog() {
 		final AtomicInteger counter = DownloaderCallable.downloaderCounter;
 		final AtomicLong timer = DownloaderCallable.downloaderTimer;
-		final long averageMs = timer.get() / counter.get();
-		Log.i(TAG, counter.get() + " bitmaps downloaded in average ms " + averageMs);
+		final int counterInt = counter.get();
+		final long averageMs = (counterInt != 0) ? timer.get() / counterInt : 0;
+		Log.i(TAG, counterInt + " bitmaps downloaded in average ms " + averageMs);
+		// reset stats
 		DownloaderCallable.downloaderStats.clear();
 		timer.set(0);
 		counter.set(0);
