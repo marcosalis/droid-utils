@@ -267,10 +267,11 @@ public class DroidUtils {
 	 * an Android runtime exception.
 	 * 
 	 * @param context
+	 *            The {@link Context} to start the intent with
 	 * @param number
 	 *            The phone number to send the SMS to
 	 * @param text
-	 *            The text of the SMS to send
+	 *            The preset text for the SMS
 	 * @return true if the SMS composer has been opened, false if telephony was
 	 *         not available on the device or the phone number wasn't in the
 	 *         accepted format by
@@ -307,6 +308,15 @@ public class DroidUtils {
 	 * 
 	 * As {@link #sendSms(Context, String, String)} but allows to use multiple
 	 * recipients for the SMS message.
+	 * 
+	 * @param context
+	 *            The {@link Context} to start the intent with
+	 * @param numbers
+	 *            An array of recipients phone numbers
+	 * @param text
+	 *            The preset text for the SMS
+	 * @return true if the SMS composer has been opened, false otherwise (for
+	 *         example, because the device has no telephony)
 	 */
 	public static boolean sendSmsToMany(@Nonnull Context context, @Nonnull String[] numbers,
 			@Nullable String text) {
@@ -314,7 +324,7 @@ public class DroidUtils {
 			return sendSms(context, numbers[0], text);
 		} // more than one recipient
 		if (hasTelephony(context)) {
-			List<String> filteredNumbers = new ArrayList<String>(numbers.length);
+			final List<String> filteredNumbers = new ArrayList<String>(numbers.length);
 			for (String number : numbers) {
 				if (number != null && PhoneNumberUtils.isWellFormedSmsAddress(number)) {
 					filteredNumbers.add(number);

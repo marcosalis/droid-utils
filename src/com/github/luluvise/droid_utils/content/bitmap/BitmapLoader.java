@@ -239,7 +239,7 @@ class BitmapLoader implements Callable<Bitmap> {
 						Log.v(TAG, key + " decoding took ms " + (endDecoding - endDownload));
 						if (!downloaderStats.add(key)) {
 							// bitmap was already downloaded!
-							Log.w(TAG, "Downloading bitmap twice: " + url);
+							Log.w(TAG, "Downloading " + key + " bitmap twice: " + url);
 						}
 					} // end debugging
 
