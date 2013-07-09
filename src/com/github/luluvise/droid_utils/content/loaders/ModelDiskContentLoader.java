@@ -54,9 +54,8 @@ import com.google.common.annotations.Beta;
  * (if any) by ignoring expiration.
  * 
  * All the actions on a cache, including {@link ActionType#PRE_FETCH}, are
- * blocking for now<br>
- * TODO: delegate pre-fetching to a separate executor and return to the caller
- * immediately<br>
+ * blocking for now. TODO: delegate pre-fetching to a separate executor and
+ * return to the caller immediately when pre-fetching.<br>
  * 
  * @param <R>
  *            Requests type (extending {@link AbstractModelRequest})
@@ -77,7 +76,7 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 	@Nullable
 	private final ModelDiskCache<M> mDiskCache;
 	private final long mExpiration;
-	@Nullable
+	@CheckForNull
 	private final RequestHandler mRequestHandler;
 	@Nullable
 	private final ConnectionMonitorInterface mConnMonitor;
@@ -116,12 +115,16 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 	@Override
 	public M load(@Nullable ActionType action, @Nonnull AbstractModelRequest<M> request,
 			@Nullable ContentUpdateCallback<M> callback) throws Exception {
-		// TODO: improve this, it's almost procedural
+		// TODO: improve this? It's almost procedural
 
 		// if network is not active, turn every action to CACHE_ONLY
 		boolean networkActive = (mConnMonitor != null) ? mConnMonitor.isNetworkActive() : true;
 		action = (networkActive) ? ((action != null) ? action : ActionType.NORMAL)
 				: ActionType.CACHE_ONLY;
+
+		if (mRequestHandler != null) { // request handler validation
+			mRequestHandler.validateRequest(request);
+		}
 
 		final String key = request.hash();
 		// we try to retrieve item from our task cache
