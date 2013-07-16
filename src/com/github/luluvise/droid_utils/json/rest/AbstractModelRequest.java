@@ -117,12 +117,11 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 	private volatile String mRequestUrl;
 
 	/**
-	 * Protected instance variable containing the lazily initialized hash value
-	 * for this request. Directly update this from the constructor, otherwise
-	 * override the {@link #hash()} method.
+	 * Lazily initialized hash value for this request. Override the
+	 * {@link #hash()} method to provide a custom value.
 	 */
 	@GuardedBy("this")
-	protected volatile String mHash; // lazily initialized
+	private volatile String mHash; // lazily initialized
 	/**
 	 * {@link ModelResponseCallback} for the request. Update this before
 	 * executing the request or it won't be used.
