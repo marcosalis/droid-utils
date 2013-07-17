@@ -39,14 +39,14 @@ import com.google.common.annotations.Beta;
 public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 
 	/**
-	 * Enumerates all possible animation configurations for setting a bitmap
-	 * into an {@link ImageView}, depending on the bitmap loading source.
+	 * Enumerates all possible animation policies for setting a bitmap into an
+	 * {@link ImageView}, depending on the bitmap loading source.
 	 */
 	public enum AnimationMode {
 		/**
-		 * Use no animation (same as using a normal {@link BitmapAsyncSetter}
+		 * Use no animation (same as using a normal {@link BitmapAsyncSetter})
 		 */
-		NONE,
+		NEVER,
 		/**
 		 * Animate only if the bitmap is not already in the memory caches
 		 */
@@ -59,25 +59,25 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 		 * Always animate (use with care: the performance impact can be
 		 * noticeable for long lists of bitmaps)
 		 */
-		ANIMATE;
+		ALWAYS;
 	}
 
 	private static final String TAG = BitmapAnimatedAsyncSetter.class.getSimpleName();
 
 	protected static final int DEFAULT_ANIM_ID = android.R.anim.fade_in;
 
+	protected final AnimationMode mAnimationMode; // defaults to NOT_IN_MEMORY
 	protected final int mCustomAnimationId;
-	protected final boolean mOnlyFromNetwork; // defaults to false
 
 	/* Constructors from superclass */
 
 	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView) {
-		this(imgView, null, -1, false);
+		this(imgView, AnimationMode.NOT_IN_MEMORY, null, -1);
 	}
 
 	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView,
 			@Nullable OnBitmapImageSetListener listener) {
-		this(imgView, listener, -1, false);
+		this(imgView, AnimationMode.NOT_IN_MEMORY, listener, -1);
 	}
 
 	/**
@@ -87,16 +87,14 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 	 * @param customAnimationId
 	 *            The ID of a custom animation to load, or -1 to use the default
 	 *            Android fade-in animation.
-	 * @param onlyFromNetwork
-	 *            true to animate only when the image comes from the network,
-	 *            false to animate also when the bitmap is in the disk cache
+	 * @param mode
+	 *            The {@link AnimationMode} to use
 	 */
-	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView,
-			@Nullable OnBitmapImageSetListener listener, int customAnimationId,
-			boolean onlyFromNetwork) {
+	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView, @Nonnull AnimationMode mode,
+			@Nullable OnBitmapImageSetListener listener, int customAnimationId) {
 		super(imgView, listener);
+		mAnimationMode = mode;
 		mCustomAnimationId = customAnimationId;
-		mOnlyFromNetwork = onlyFromNetwork;
 	}
 
 	/**
@@ -112,8 +110,8 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 	 */
 	protected void setImageBitmap(@Nonnull final ImageView imageView, @Nonnull Bitmap bitmap,
 			@Nonnull BitmapSource source) {
-		// only animate when setting bitmap asynchronously
-		if (source == BitmapSource.NETWORK || (source == BitmapSource.DISK && !mOnlyFromNetwork)) {
+		// only animate when the bitmap source is compatible with the set mode
+		if (shouldAnimate(source, mAnimationMode)) {
 			final Animation animation = imageView.getAnimation();
 			if (animation != null) { // reuse animation
 				if (animation.hasEnded()) {
@@ -140,4 +138,25 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 		}
 		super.setImageBitmap(imageView, bitmap, source); // set image bitmap
 	}
+
+	/**
+	 * Returns whether the bitmap setting should be animate depending on the
+	 * current {@link BitmapSource} and {@link AnimationMode}.
+	 */
+	protected static final boolean shouldAnimate(@Nonnull BitmapSource source,
+			@Nonnull AnimationMode mode) {
+		switch (mode) {
+		case ALWAYS:
+			return true;
+		case NOT_IN_MEMORY:
+			return source == BitmapSource.NETWORK || source == BitmapSource.DISK;
+		case FROM_NETWORK:
+			return source == BitmapSource.NETWORK;
+		case NEVER:
+			return false;
+		default:
+			throw new IllegalArgumentException("Unsupported animation mode");
+		}
+	}
+
 }
