@@ -38,21 +38,46 @@ import com.google.common.annotations.Beta;
 @ThreadSafe
 public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 
+	/**
+	 * Enumerates all possible animation configurations for setting a bitmap
+	 * into an {@link ImageView}, depending on the bitmap loading source.
+	 */
+	public enum AnimationMode {
+		/**
+		 * Use no animation (same as using a normal {@link BitmapAsyncSetter}
+		 */
+		NONE,
+		/**
+		 * Animate only if the bitmap is not already in the memory caches
+		 */
+		NOT_IN_MEMORY,
+		/**
+		 * Animate only if the bitmap was loaded from network
+		 */
+		FROM_NETWORK,
+		/**
+		 * Always animate (use with care: the performance impact can be
+		 * noticeable for long lists of bitmaps)
+		 */
+		ANIMATE;
+	}
+
 	private static final String TAG = BitmapAnimatedAsyncSetter.class.getSimpleName();
 
 	protected static final int DEFAULT_ANIM_ID = android.R.anim.fade_in;
 
 	protected final int mCustomAnimationId;
+	protected final boolean mOnlyFromNetwork; // defaults to false
 
 	/* Constructors from superclass */
 
 	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView) {
-		this(imgView, null, -1);
+		this(imgView, null, -1, false);
 	}
 
 	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView,
 			@Nullable OnBitmapImageSetListener listener) {
-		this(imgView, listener, -1);
+		this(imgView, listener, -1, false);
 	}
 
 	/**
@@ -62,11 +87,16 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 	 * @param customAnimationId
 	 *            The ID of a custom animation to load, or -1 to use the default
 	 *            Android fade-in animation.
+	 * @param onlyFromNetwork
+	 *            true to animate only when the image comes from the network,
+	 *            false to animate also when the bitmap is in the disk cache
 	 */
 	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView,
-			@Nullable OnBitmapImageSetListener listener, int customAnimationId) {
+			@Nullable OnBitmapImageSetListener listener, int customAnimationId,
+			boolean onlyFromNetwork) {
 		super(imgView, listener);
 		mCustomAnimationId = customAnimationId;
+		mOnlyFromNetwork = onlyFromNetwork;
 	}
 
 	/**
@@ -83,7 +113,7 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 	protected void setImageBitmap(@Nonnull final ImageView imageView, @Nonnull Bitmap bitmap,
 			@Nonnull BitmapSource source) {
 		// only animate when setting bitmap asynchronously
-		if (source != BitmapSource.MEMORY) {
+		if (source == BitmapSource.NETWORK || (source == BitmapSource.DISK && !mOnlyFromNetwork)) {
 			final Animation animation = imageView.getAnimation();
 			if (animation != null) { // reuse animation
 				if (animation.hasEnded()) {
