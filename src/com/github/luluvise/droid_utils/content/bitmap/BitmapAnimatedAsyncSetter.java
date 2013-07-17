@@ -84,11 +84,11 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 	 * @see BitmapAsyncSetter#BitmapAsyncSetter(ImageView,
 	 *      OnBitmapImageSetListener)
 	 * 
+	 * @param mode
+	 *            The {@link AnimationMode} to use
 	 * @param customAnimationId
 	 *            The ID of a custom animation to load, or -1 to use the default
 	 *            Android fade-in animation.
-	 * @param mode
-	 *            The {@link AnimationMode} to use
 	 */
 	public BitmapAnimatedAsyncSetter(@Nonnull ImageView imgView, @Nonnull AnimationMode mode,
 			@Nullable OnBitmapImageSetListener listener, int customAnimationId) {
@@ -107,6 +107,8 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 	 *            The {@link ImageView} to set the bitmap into
 	 * @param bitmap
 	 *            The {@link Bitmap} to set
+	 * @param source
+	 *            The {@link BitmapSource} from where the bitmap was loaded
 	 */
 	protected void setImageBitmap(@Nonnull final ImageView imageView, @Nonnull Bitmap bitmap,
 			@Nonnull BitmapSource source) {

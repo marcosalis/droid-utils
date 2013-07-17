@@ -38,6 +38,8 @@ import com.google.common.annotations.Beta;
  * Callback class to use with a {@link BitmapProxy} to set the bitmap to an
  * {@link ImageView} if this is still existing and attached to an Activity.
  * 
+ * TODO: handle placeholder setting when the bitmap loading fails
+ * 
  * @since 1.0
  * @author Marco Salis
  */
