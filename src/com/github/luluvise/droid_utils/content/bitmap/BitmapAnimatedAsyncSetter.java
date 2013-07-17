@@ -20,6 +20,8 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -117,10 +119,22 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 			final Animation animation = imageView.getAnimation();
 			if (animation != null) { // reuse animation
 				if (animation.hasEnded()) {
-					animation.reset();
-					animation.startNow();
-					if (BITMAP_DEBUG) { // debugging
-						Log.w(TAG, "Reusing image view ended animation " + imageView.hashCode());
+					// we don't want to animate if we're just setting the same
+					// bitmap again in the same view (can happen when scrolling
+					// back and forth in a long list)
+					final Drawable drawable = imageView.getDrawable();
+					if (drawable instanceof BitmapDrawable) {
+						final Bitmap oldBitmap = ((BitmapDrawable) drawable).getBitmap();
+						if (!bitmap.equals(oldBitmap)) { // different bitmap
+							animation.startNow();
+							if (BITMAP_DEBUG) { // debugging
+								Log.w(TAG, "Reusing ended animation " + imageView.hashCode());
+							}
+						} else {
+							if (BITMAP_DEBUG) { // debugging
+								Log.w(TAG, "Same bitmap, do not animate " + imageView.hashCode());
+							}
+						}
 					}
 				} else {
 					if (BITMAP_DEBUG) { // debugging
