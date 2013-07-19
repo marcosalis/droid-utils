@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -159,17 +160,20 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Nonnull
 	@Override
-	public HttpRequestFactory createRequestFactory(HttpTransport transport) {
+	public HttpRequestFactory createRequestFactory(@Nonnull HttpTransport transport) {
 		return createStandardRequestFactory(transport);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
+	@Nonnull
 	@Override
-	public HttpRequest buildRequest(String method, String urlString, HttpContent content)
-			throws IOException {
+	public HttpRequest buildRequest(@Nonnull String method, @Nonnull String urlString,
+			@Nullable HttpContent content) throws IOException {
+		// TODO: check for urlString correctness
 		return mDefaultRequestFactory.buildRequest(method, new GenericUrl(urlString), content);
 	}
 
@@ -179,7 +183,8 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	 * @throws UnsupportedOperationException
 	 */
 	@Override
-	public HttpRequest buildCustomRequest(String method, String urlString) throws IOException {
+	public HttpRequest buildCustomRequest(@Nonnull String method, @Nonnull String urlString)
+			throws IOException {
 		throw new UnsupportedOperationException();
 	}
 
@@ -189,14 +194,15 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	 * @throws UnsupportedOperationException
 	 */
 	@Override
-	public HttpRequest buildCustomRequest(String method, String urlString, HttpContent content)
-			throws IOException {
+	public HttpRequest buildCustomRequest(@Nonnull String method, @Nonnull String urlString,
+			@Nullable HttpContent content) throws IOException {
 		throw new UnsupportedOperationException();
 	}
 
 	/**
 	 * Returns the default {@link HttpTransport} used by the manager.
 	 */
+	@Nonnull
 	public HttpTransport getDefaultHttpTransport() {
 		return mDefaultHttpTransport;
 	}
@@ -209,6 +215,7 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 	 *            The {@link HttpTransport} used to create requests
 	 * @return The created {@link HttpRequestFactory}
 	 */
+	@Nonnull
 	private HttpRequestFactory createStandardRequestFactory(HttpTransport transport) {
 		return transport.createRequestFactory(new DefaultHttpRequestInitializer());
 	}

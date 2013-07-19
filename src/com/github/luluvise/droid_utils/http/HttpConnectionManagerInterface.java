@@ -17,6 +17,9 @@ package com.github.luluvise.droid_utils.http;
 
 import java.io.IOException;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpMethods;
@@ -62,7 +65,7 @@ public interface HttpConnectionManagerInterface {
 	 *            The HttpTransport to be used for this factory
 	 * @return The created {@link HttpRequestFactory}
 	 */
-	public HttpRequestFactory createRequestFactory(HttpTransport transport);
+	public HttpRequestFactory createRequestFactory(@Nonnull HttpTransport transport);
 
 	/**
 	 * Shortcut for the HttpRequest builder. See
@@ -81,21 +84,22 @@ public interface HttpConnectionManagerInterface {
 	 * @throws IllegalArgumentException
 	 *             If the passed url has a syntax error
 	 */
-	public HttpRequest buildRequest(String method, String urlString, HttpContent content)
-			throws IOException;
+	public HttpRequest buildRequest(@Nonnull String method, @Nonnull String urlString,
+			@Nullable HttpContent content) throws IOException;
 
 	/**
 	 * As
 	 * {@link HttpConnectionManagerInterface#buildRequest(String, String, HttpContent)}
 	 * , for server requests that require custom parameters only.
 	 */
-	public HttpRequest buildCustomRequest(String method, String urlString, HttpContent content)
-			throws IOException;
+	public HttpRequest buildCustomRequest(@Nonnull String method, @Nonnull String urlString,
+			@Nullable HttpContent content) throws IOException;
 
 	/**
 	 * As {@link HttpConnectionManagerInterface#buildRequest(String, String)},
 	 * for server requests that require custom parameters only.
 	 */
-	public HttpRequest buildCustomRequest(String method, String urlString) throws IOException;
+	public HttpRequest buildCustomRequest(@Nonnull String method, @Nonnull String urlString)
+			throws IOException;
 
 }
