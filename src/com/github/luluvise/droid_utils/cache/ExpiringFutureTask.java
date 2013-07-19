@@ -16,9 +16,14 @@
 package com.github.luluvise.droid_utils.cache;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
+import com.github.luluvise.droid_utils.concurrent.SettableFutureTask;
 import com.github.luluvise.droid_utils.json.model.JsonModel;
 
 /**
@@ -37,16 +42,38 @@ public class ExpiringFutureTask<E extends JsonModel> extends SettableFutureTask<
 	private final long mExpiration;
 
 	/**
-	 * Instantiate an {@link ExpiringFutureTask}
+	 * Instantiate an {@link ExpiringFutureTask} from a {@link Callable}
 	 * 
 	 * @param callable
-	 *            The content Future computation to cache
+	 *            The content {@link Future} computation
 	 * @param expiration
 	 *            The expiration time, in milliseconds, or
 	 *            {@link Long#MAX_VALUE} for no expiration.
 	 */
-	public ExpiringFutureTask(Callable<E> callable, long expiration) {
+	public ExpiringFutureTask(@Nonnull Callable<E> callable, @Nonnegative long expiration) {
 		super(callable);
+		if (expiration == Long.MAX_VALUE) {
+			// force task to never expire
+			mExpiration = Long.MAX_VALUE;
+		} else {
+			mExpiration = System.currentTimeMillis() + expiration;
+		}
+	}
+
+	/**
+	 * Instantiate an {@link ExpiringFutureTask} from a {@link Runnable}
+	 * 
+	 * @param runnable
+	 *            The {@link Runnable} that executes the task
+	 * @param result
+	 *            The result of the computation
+	 * @param expiration
+	 *            The expiration time, in milliseconds, or
+	 *            {@link Long#MAX_VALUE} for no expiration.
+	 */
+	public ExpiringFutureTask(@Nonnull Runnable runnable, @Nullable E result,
+			@Nonnegative long expiration) {
+		super(runnable, result);
 		if (expiration == Long.MAX_VALUE) {
 			// force task to never expire
 			mExpiration = Long.MAX_VALUE;

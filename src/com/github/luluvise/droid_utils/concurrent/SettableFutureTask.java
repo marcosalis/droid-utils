@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.luluvise.droid_utils.cache;
+package com.github.luluvise.droid_utils.concurrent;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.google.common.annotations.Beta;
 
@@ -42,7 +43,7 @@ public class SettableFutureTask<E> extends FutureTask<E> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public SettableFutureTask(@Nonnull Runnable runnable, E result) {
+	public SettableFutureTask(@Nonnull Runnable runnable, @Nullable E result) {
 		super(runnable, result);
 	}
 
