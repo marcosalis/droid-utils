@@ -188,8 +188,9 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 	 * {@link BitmapProxy} by passing the main request parameters and type of
 	 * actions.
 	 * 
-	 * <b>This needs to be called from the UI thread</b>, as the image setting
-	 * is asynchronous except in the case we already have the image available in
+	 * <b>This needs to be called from the UI thread except when using
+	 * {@link ActionType#PRE_FETCH} mode</b>, as the image setting is
+	 * asynchronous except in the case we already have the image available in
 	 * the memory cache.
 	 * 
 	 * @param cache
