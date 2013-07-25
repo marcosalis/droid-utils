@@ -128,12 +128,20 @@ public class BitmapAnimatedAsyncSetter extends BitmapAsyncSetter {
 						if (!bitmap.equals(oldBitmap)) { // different bitmap
 							animation.startNow();
 							if (BITMAP_DEBUG) { // debugging
-								Log.w(TAG, "Reusing ended animation " + imageView.hashCode());
+								Log.w(TAG,
+										"Reusing ended animation in reused view"
+												+ imageView.hashCode());
 							}
 						} else {
 							if (BITMAP_DEBUG) { // debugging
 								Log.w(TAG, "Same bitmap, do not animate " + imageView.hashCode());
 							}
+						}
+					} else {
+						animation.startNow();
+						if (BITMAP_DEBUG) { // debugging
+							Log.w(TAG,
+									"Reusing ended animation in empty view" + imageView.hashCode());
 						}
 					}
 				} else {
