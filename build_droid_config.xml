@@ -15,9 +15,9 @@
         </filterset>
 
         <copy
-            file="../droid-mava-utils/config/DroidConfig.java"
+            file="../droid-utils/config/DroidConfig.java"
             overwrite="true"
-            todir="../droid-mava-utils/src/com/github/luluvise/droid_utils" >
+            todir="../droid-utils/src/com/github/luluvise/droid_utils" >
 
             <filterset refid="build-tokens" />
         </copy>
@@ -33,12 +33,12 @@
 
     <target name="droid-read-debug-properties" >
 
-        <property file="../droid-mava-utils/config_debug.properties" />
+        <property file="../droid-utils/config_debug.properties" />
     </target>
 
     <target name="droid-read-release-properties" >
 
-        <property file="../droid-mava-utils/config_release.properties" />
+        <property file="../droid-utils/config_release.properties" />
     </target>
 
 </project>
