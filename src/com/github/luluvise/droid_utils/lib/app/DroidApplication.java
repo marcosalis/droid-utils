@@ -113,6 +113,7 @@ public class DroidApplication extends Application {
 		mMemoryClass = memoryClass * 1024 * 1024; // convert to bytes
 		if (DroidConfig.DEBUG) {
 			Log.i(TAG, "App available memory: " + mMemoryClass + " bytes");
+			Log.i(TAG, "Runtime max memory: " + Runtime.getRuntime().maxMemory() + " bytes");
 			Log.i(TAG, "App total cores: " + DroidUtils.CPU_CORES);
 			Log.i(TAG, "App available cores: " + Runtime.getRuntime().availableProcessors());
 		}
