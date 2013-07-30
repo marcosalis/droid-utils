@@ -221,7 +221,7 @@ public abstract class AbstractModelRequest<E extends JsonModel> implements Calla
 	 * Returns the concrete request class HTTP method as per {@link HttpMethods}
 	 */
 	@Nonnull
-	protected final String getHttpMethod() {
+	public final String getHttpMethod() {
 		return mHttpMethod;
 	}
 
