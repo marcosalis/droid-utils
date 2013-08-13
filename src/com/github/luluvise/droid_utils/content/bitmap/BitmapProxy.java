@@ -226,7 +226,7 @@ public abstract class BitmapProxy extends AbstractContentProxy implements
 				 * This is supposed to be called from the UI thread and be
 				 * synchronous.
 				 */
-				setter.setBitmapSync(bitmap);
+				setter.setBitmapSync(url, bitmap);
 			}
 			return null; // no Future to return
 		} else {
