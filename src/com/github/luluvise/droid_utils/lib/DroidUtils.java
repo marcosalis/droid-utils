@@ -30,6 +30,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -475,7 +476,7 @@ public class DroidUtils {
 	}
 
 	/**
-	 * Adds the flags {@link Intent#FLAG_ACTIVITY_NEW_TASK} and
+	 * Adds the flags {@link Intent#FLAG_ACTIVITY_NEW_TASK} and if possible
 	 * {@link Intent#FLAG_ACTIVITY_CLEAR_TASK} (only available from API 11) to
 	 * the passed intent.
 	 * 
@@ -486,9 +487,11 @@ public class DroidUtils {
 	 * @param intent
 	 *            The {@link Intent} to be modified
 	 */
-	@TargetApi(11)
+	@SuppressLint("InlinedApi")
 	public static void setNewTaskFlag(@Nonnull Intent intent) {
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		if (isMinimumSdkLevel(11)) {
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		}
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 	}
 
