@@ -132,6 +132,14 @@ public class HttpConnectionManager implements HttpConnectionManagerInterface {
 		if (keepAliveStrategy != null) {
 			httpClient.setKeepAliveStrategy(keepAliveStrategy);
 		}
+		/**
+		 * Android has a known issue that causes the generation of unsafe
+		 * {@link SecureRandom} values. See the link below for more information.
+		 * 
+		 * <pre>
+		 * http://android-developers.blogspot.com.au/2013/08/some-securerandom-thoughts.html
+		 * </pre>
+		 */
 		mDefaultHttpTransport = new ApacheHttpTransport(httpClient);
 		// }
 		mDefaultRequestFactory = createStandardRequestFactory(mDefaultHttpTransport);
