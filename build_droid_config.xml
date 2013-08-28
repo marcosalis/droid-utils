@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="DroidMavaUtils" >
+<project name="droid-mava-utils" >
 
     <target name="process-config" >
 
@@ -8,12 +8,16 @@
             <filter
                 token="droid.debug"
                 value="${droid.debug}" />
+
+            <filter
+                token="droid.strict_mode"
+                value="${droid.strict_mode}" />
         </filterset>
 
         <copy
-            file="../droid-mava-utils/config/DroidConfig.java"
+            file="../droid-utils/config/DroidConfig.java"
             overwrite="true"
-            todir="../droid-mava-utils/src/com/github/luluvise/droid_utils" >
+            todir="../droid-utils/src/com/github/luluvise/droid_utils" >
 
             <filterset refid="build-tokens" />
         </copy>
@@ -29,12 +33,12 @@
 
     <target name="droid-read-debug-properties" >
 
-        <property file="../droid-mava-utils/config_debug.properties" />
+        <property file="../droid-utils/config_debug.properties" />
     </target>
 
     <target name="droid-read-release-properties" >
 
-        <property file="../droid-mava-utils/config_release.properties" />
+        <property file="../droid-utils/config_release.properties" />
     </target>
 
 </project>

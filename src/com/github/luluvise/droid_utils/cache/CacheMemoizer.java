@@ -26,9 +26,7 @@ import java.util.concurrent.FutureTask;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
-import javax.annotation.concurrent.Immutable;
-
-import android.support.v4.util.LruCache;
+import javax.annotation.concurrent.ThreadSafe;
 
 import com.google.common.annotations.Beta;
 import com.google.common.cache.LoadingCache;
@@ -48,11 +46,16 @@ import com.google.common.cache.LoadingCache;
  * @author Marco Salis
  */
 @Beta
-@Immutable
+@ThreadSafe
 public class CacheMemoizer<K, V> {
 
 	protected static final int INIT_CACHE_SIZE = 16;
 
+	/**
+	 * This map contains already executed, or in execution tasks from where the
+	 * memoizer will try to retrieve, concurrently, the cache item before
+	 * running a new {@link Callable}.
+	 */
 	private final ConcurrentMap<K, Future<V>> mTaskCache;
 
 	/**
@@ -66,18 +69,27 @@ public class CacheMemoizer<K, V> {
 	}
 
 	/**
-	 * Gets the internal cache. We need to make this available to callers
-	 * because (maybe space-consuming) items stored in other {@link LruCache}s
-	 * might expire and the holding {@link FutureTask} would prevent them from
-	 * being GCed.
+	 * Calls {@link ConcurrentMap#remove(Object)} on the internal cache, for
+	 * example to remove an item if it gets evicted from an LRU cache.
+	 * 
+	 * @param key
+	 *            The cache key
+	 * @return The {@link Future} associated with the key, if any
 	 */
-	@Nonnull
-	public final ConcurrentMap<K, Future<V>> getCache() {
-		return mTaskCache;
+	@CheckForNull
+	public final Future<V> remove(@Nonnull K key) {
+		return mTaskCache.remove(key);
 	}
 
 	/**
-	 * Retrieves an item, reliably checking if the item associated with the key
+	 * Clears the memoizer's internal futures cache.
+	 */
+	public final void clear() {
+		mTaskCache.clear();
+	}
+
+	/**
+	 * Retrieves an item, reliably checking if the item associated with the
 	 * {@code key} is being retrieved from another task. If so, it waits for the
 	 * existing task to be completed, otherwise it starts the passed task.
 	 * 
@@ -126,7 +138,8 @@ public class CacheMemoizer<K, V> {
 	 * 
 	 * @author Brian Goetz and Tim Peierls
 	 */
-	public static Exception launderThrowable(Throwable t) {
+	@Nonnull
+	public static Exception launderThrowable(@Nonnull Throwable t) {
 		if (t instanceof RuntimeException) {
 			return (RuntimeException) t;
 		} else if (t instanceof Exception) {

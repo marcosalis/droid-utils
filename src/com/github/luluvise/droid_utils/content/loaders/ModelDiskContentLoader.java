@@ -54,14 +54,13 @@ import com.google.common.annotations.Beta;
  * (if any) by ignoring expiration.
  * 
  * All the actions on a cache, including {@link ActionType#PRE_FETCH}, are
- * blocking for now<br>
- * TODO: delegate pre-fetching to a separate executor and return to the caller
- * immediately<br>
+ * blocking for now. TODO: delegate pre-fetching to a separate executor and
+ * return to the caller immediately when pre-fetching.<br>
  * 
  * @param <R>
- *            Requests extending {@link AbstractModelRequest}
+ *            Requests type (extending {@link AbstractModelRequest})
  * @param <M>
- *            Models extending {@link JsonModel}
+ *            Models type (extending {@link JsonModel})
  * 
  * @since 1.0
  * @author Marco Salis
@@ -77,7 +76,7 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 	@Nullable
 	private final ModelDiskCache<M> mDiskCache;
 	private final long mExpiration;
-	@Nullable
+	@CheckForNull
 	private final RequestHandler mRequestHandler;
 	@Nullable
 	private final ConnectionMonitorInterface mConnMonitor;
@@ -114,14 +113,18 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 	 *      ContentUpdateCallback)
 	 */
 	@Override
-	public M load(ActionType action, AbstractModelRequest<M> request,
-			ContentUpdateCallback<M> callback) throws Exception {
-		// TODO: improve this, it's almost procedural
+	public M load(@Nullable ActionType action, @Nonnull AbstractModelRequest<M> request,
+			@Nullable ContentUpdateCallback<M> callback) throws Exception {
+		// TODO: improve this? It's almost procedural
 
 		// if network is not active, turn every action to CACHE_ONLY
 		boolean networkActive = (mConnMonitor != null) ? mConnMonitor.isNetworkActive() : true;
 		action = (networkActive) ? ((action != null) ? action : ActionType.NORMAL)
 				: ActionType.CACHE_ONLY;
+
+		if (mRequestHandler != null) { // request handler validation
+			mRequestHandler.validateRequest(request);
+		}
 
 		final String key = request.hash();
 		// we try to retrieve item from our task cache
@@ -217,8 +220,9 @@ public final class ModelDiskContentLoader<M extends JsonModel> implements
 		@Nullable
 		private final ContentUpdateCallback<M> mUpdateCallback;
 
-		public IOContentLoader(ActionType action, AbstractModelRequest<M> request,
-				ContentUpdateCallback<M> callback) {
+		public IOContentLoader(@Nonnull ActionType action,
+				@Nonnull AbstractModelRequest<M> request,
+				@Nullable ContentUpdateCallback<M> callback) {
 			mAction = action;
 			mRequest = request;
 			mUpdateCallback = callback;

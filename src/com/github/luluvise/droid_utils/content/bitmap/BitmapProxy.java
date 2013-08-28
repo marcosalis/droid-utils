@@ -15,10 +15,12 @@
  */
 package com.github.luluvise.droid_utils.content.bitmap;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -27,21 +29,27 @@ import javax.annotation.concurrent.Immutable;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.os.Process;
+import android.util.Log;
 import android.widget.ImageView;
 
+import com.github.luluvise.droid_utils.DroidConfig;
+import com.github.luluvise.droid_utils.annotations.NotForUIThread;
 import com.github.luluvise.droid_utils.cache.CacheMemoizer;
+import com.github.luluvise.droid_utils.cache.ContentCache.OnEntryRemovedListener;
 import com.github.luluvise.droid_utils.cache.bitmap.BitmapDiskCache;
 import com.github.luluvise.droid_utils.cache.bitmap.BitmapLruCache;
 import com.github.luluvise.droid_utils.cache.keys.CacheUrlKey;
+import com.github.luluvise.droid_utils.concurrent.PriorityThreadFactory;
+import com.github.luluvise.droid_utils.concurrent.ReorderingThreadPoolExecutor;
 import com.github.luluvise.droid_utils.content.AbstractContentProxy;
 import com.github.luluvise.droid_utils.lib.DroidUtils;
-import com.github.luluvise.droid_utils.logging.LoggedThreadFactory;
 import com.google.common.annotations.Beta;
 
 /**
  * Abstract base class for a {@link Bitmap} content proxy. Every
- * {@link BitmapProxy} subclass owns one or more memory caches (in order to be
- * able to fine-tune the size of each of them) and a disk cache, which are
+ * {@link BitmapProxy} subclass can hold one or more (in order to be able to
+ * fine-tune the size of each of them) memory caches and a disk cache, which are
  * managed separately.
  * 
  * Every {@link BitmapProxy} shares the same executors, one for querying the
@@ -58,7 +66,8 @@ import com.google.common.annotations.Beta;
  */
 @Beta
 @Immutable
-public abstract class BitmapProxy extends AbstractContentProxy {
+public abstract class BitmapProxy extends AbstractContentProxy implements
+		OnEntryRemovedListener<String, Bitmap> {
 
 	static {
 		// here we query memory and disk caches and set bitmaps into views
@@ -66,44 +75,122 @@ public abstract class BitmapProxy extends AbstractContentProxy {
 		// here we either execute a network request or we wait for it
 		final int dwExecutorSize = DroidUtils.getIOBoundPoolSize();
 
-		BITMAP_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				executorSize, new LoggedThreadFactory("BitmapProxy executor thread")));
-		DOWNLOADER_EXECUTOR = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(
-				dwExecutorSize, new LoggedThreadFactory("BitmapProxy downloader executor thread")));
+		// prepare bitmaps main executor
+		final LinkedBlockingQueue<Runnable> executorQueue = new LinkedBlockingQueue<Runnable>();
+		final PriorityThreadFactory executorFactory = new PriorityThreadFactory(
+				"BitmapProxy executor thread", Process.THREAD_PRIORITY_BACKGROUND);
+		final ThreadPoolExecutor bitmapExecutor = new ThreadPoolExecutor(executorSize,
+				executorSize, 0L, TimeUnit.MILLISECONDS, executorQueue, executorFactory);
+		BITMAP_EXECUTOR = bitmapExecutor;
+
+		// prepare bitmaps downloader executor
+		final BlockingQueue<Runnable> downloaderQueue = ReorderingThreadPoolExecutor
+				.createBlockingQueue();
+		final PriorityThreadFactory downloaderFactory = new PriorityThreadFactory(
+				"BitmapProxy downloader executor thread", Process.THREAD_PRIORITY_DEFAULT);
+		final ReorderingThreadPoolExecutor<String> downloaderExecutor = new ReorderingThreadPoolExecutor<String>(
+				dwExecutorSize, dwExecutorSize, 0L, TimeUnit.MILLISECONDS, downloaderQueue,
+				downloaderFactory);
+		DOWNLOADER_EXECUTOR = downloaderExecutor;
+
+		BITMAP_EXECUTOR_Q = executorQueue;
+		DOWNLOADER_EXECUTOR_Q = downloaderQueue;
+
 		DOWNLOAD_FUTURES = new CacheMemoizer<String, Bitmap>(dwExecutorSize);
 	}
 
-	private static final ExecutorService BITMAP_EXECUTOR;
+	private static final String TAG = BitmapProxy.class.getSimpleName();
 
-	private static final ExecutorService DOWNLOADER_EXECUTOR;
+	private static final ThreadPoolExecutor BITMAP_EXECUTOR;
+	private static final ReorderingThreadPoolExecutor<String> DOWNLOADER_EXECUTOR;
 
-	/**
-	 * Gets the {@link Executor} to be used by subclasses.
-	 */
-	@Nonnull
-	protected static final ExecutorService getExecutor() {
-		return BITMAP_EXECUTOR;
-	}
-
-	/**
-	 * Gets the Executor to be used for downloading bitmaps
-	 */
-	@Nonnull
-	public static final ExecutorService getDownloaderExecutor() {
-		return DOWNLOADER_EXECUTOR;
-	}
+	/* private executors blocking queues */
+	private static final LinkedBlockingQueue<Runnable> BITMAP_EXECUTOR_Q;
+	private static final BlockingQueue<Runnable> DOWNLOADER_EXECUTOR_Q;
 
 	/**
 	 * {@link CacheMemoizer} used for loading Bitmaps from the cache.
 	 */
-	protected static final CacheMemoizer<String, Bitmap> DOWNLOAD_FUTURES;
+	private static final CacheMemoizer<String, Bitmap> DOWNLOAD_FUTURES;
+
+	/**
+	 * Executes a runnable task in the bitmap downloader thread pool.
+	 * 
+	 * @param runnable
+	 *            The {@link Runnable} to execute (must be non null)
+	 */
+	public static synchronized final void executeInDownloader(@Nonnull Runnable runnable) {
+		DOWNLOADER_EXECUTOR.execute(runnable);
+	}
+
+	/**
+	 * Executes a callable task in the bitmap downloader thread pool.
+	 * 
+	 * @param callable
+	 *            The {@link Callable} to execute (must be non null)
+	 */
+	public static synchronized final Future<Bitmap> submitInDownloader(
+			@Nonnull Callable<Bitmap> callable) {
+		return DOWNLOADER_EXECUTOR.submit(callable);
+	}
+
+	/**
+	 * Executes a callable task in the bitmap downloader thread pool.
+	 * 
+	 * @param key
+	 *            The key to associate with the submitted task
+	 * @param callable
+	 *            The {@link Callable} to execute (must be non null)
+	 */
+	public static synchronized final Future<Bitmap> submitInDownloader(@Nonnull String key,
+			@Nonnull Callable<Bitmap> callable) {
+		return DOWNLOADER_EXECUTOR.submitWithKey(key, callable);
+	}
+
+	/**
+	 * Attempts to prioritize a bitmap download by moving to the top of the
+	 * executor queue the task with the passed key, if it exists.
+	 * 
+	 * @param key
+	 *            The string key corresponding to the bitmap
+	 */
+	@NotForUIThread
+	public static synchronized final void moveDownloadToFront(@Nonnull String key) {
+		DOWNLOADER_EXECUTOR.moveToFront(key);
+	}
+
+	/**
+	 * Remove all not-running tasks from all static bitmap executors.
+	 */
+	public static synchronized final void clearBitmapExecutors() {
+		BITMAP_EXECUTOR_Q.clear();
+		DOWNLOADER_EXECUTOR_Q.clear();
+		DOWNLOADER_EXECUTOR.clearKeysMap();
+
+		if (DroidConfig.DEBUG) {
+			BitmapLoader.clearStatsLog();
+			Log.d(TAG, "Bitmap executors tasks cleared");
+			Log.v(TAG, "Bitmap executor tasks: " + BITMAP_EXECUTOR.getTaskCount() + ", completed: "
+					+ BITMAP_EXECUTOR.getCompletedTaskCount());
+			Log.v(TAG, "Bitmap downloader executor tasks: " + DOWNLOADER_EXECUTOR.getTaskCount()
+					+ ", completed: " + DOWNLOADER_EXECUTOR.getCompletedTaskCount());
+		}
+	}
+
+	@Override
+	public void onEntryRemoved(boolean evicted, String key, Bitmap value) {
+		// remove evicted bitmaps from the downloads memoizer to allow GC
+		DOWNLOAD_FUTURES.remove(key);
+	}
 
 	/**
 	 * Method to be called by subclasses to get a bitmap content from any
-	 * BitmapProxy by passing the main request parameters and type of actions.
+	 * {@link BitmapProxy} by passing the main request parameters and type of
+	 * actions.
 	 * 
-	 * <b>This needs to be called from the UI thread</b>, as the image setting
-	 * is asynchronous except in the case we already have the image available in
+	 * <b>This needs to be called from the UI thread except when using
+	 * {@link ActionType#PRE_FETCH} mode</b>, as the image setting is
+	 * asynchronous except in the case we already have the image available in
 	 * the memory cache.
 	 * 
 	 * @param cache
@@ -115,7 +202,7 @@ public abstract class BitmapProxy extends AbstractContentProxy {
 	 * @param action
 	 *            The {@link ActionType} to perform, one of
 	 *            {@link ActionType#NORMAL} or {@link ActionType#PRE_FETCH}
-	 * @param callback
+	 * @param setter
 	 *            The {@link BitmapAsyncSetter} to set the bitmap in an
 	 *            {@link ImageView}. Can be null with
 	 *            {@link ActionType#PRE_FETCH}
@@ -127,7 +214,7 @@ public abstract class BitmapProxy extends AbstractContentProxy {
 	@CheckForNull
 	protected Future<Bitmap> getBitmap(@Nonnull BitmapLruCache<String> cache,
 			@Nullable BitmapDiskCache diskCache, @Nonnull CacheUrlKey url,
-			@Nullable ActionType action, BitmapAsyncSetter callback,
+			@Nullable ActionType action, BitmapAsyncSetter setter,
 			@CheckForNull Drawable placeholder) {
 		final boolean preFetch = (action == ActionType.PRE_FETCH);
 		Bitmap bitmap;
@@ -139,20 +226,20 @@ public abstract class BitmapProxy extends AbstractContentProxy {
 				 * This is supposed to be called from the UI thread and be
 				 * synchronous.
 				 */
-				callback.setBitmapSync(bitmap);
+				setter.setBitmapSync(url, bitmap);
 			}
 			return null; // no Future to return
 		} else {
 			if (!preFetch) {
 				// set temporary placeholder if we are not just pre-fetching
 				if (placeholder != null) {
-					callback.setPlaceholderSync(placeholder);
+					setter.setPlaceholderSync(placeholder);
 				}
 			} else {
-				callback = null; // make sure there's no callback
+				setter = null; // make sure there's no callback
 			}
 			return BITMAP_EXECUTOR.submit(new BitmapLoader(DOWNLOAD_FUTURES, cache, diskCache, url,
-					callback));
+					setter));
 		}
 	}
 

@@ -15,6 +15,8 @@
  */
 package com.github.luluvise.droid_utils.content.loaders;
 
+import javax.annotation.Nonnull;
+
 import com.github.luluvise.droid_utils.content.ContentProxy;
 import com.github.luluvise.droid_utils.content.ContentProxy.ActionType;
 import com.github.luluvise.droid_utils.json.model.JsonModel;
@@ -50,12 +52,12 @@ public interface ContentLoader<R extends AbstractModelRequest<M>, M extends Json
 	 * @throws Exception
 	 *             if an exception was thrown during the retrieval.
 	 */
-	public M load(ActionType action, final R request, ContentUpdateCallback<M> callback)
+	public M load(ActionType action, @Nonnull final R request, ContentUpdateCallback<M> callback)
 			throws Exception;
 
 	/**
 	 * Interface for custom handlers that a {@link ContentLoader} uses to
-	 * execute an {@link AbstractModelRequest}.
+	 * validate and execute an {@link AbstractModelRequest}.
 	 * 
 	 * The purpose is to abstract as much as possible the request execution,
 	 * allowing callers to inject custom actions when the content loader asks
@@ -65,18 +67,34 @@ public interface ContentLoader<R extends AbstractModelRequest<M>, M extends Json
 	 *            The type of request (can be a subclass of
 	 *            {@link AbstractModelRequest})
 	 */
+	@Beta
 	public static interface RequestHandler {
 
 		/**
-		 * Executes the passed request within the handler.
+		 * Validates a request before execution. This can be used to perform
+		 * customizations or set values that may affect the request hash (or
+		 * URL) in a non-immutable request prior to passing them through the
+		 * {@link ContentLoader} and being executed.
+		 * 
+		 * See {@link AbstractModelRequest#setRequestUrl(String)} for more
+		 * information on how a request hash might change.
 		 * 
 		 * @param request
-		 *            The {@link AbstractModelRequest} to request.
+		 *            The {@link AbstractModelRequest} to validate
+		 * @return true if the passed request has been modified, false otherwise
+		 */
+		public boolean validateRequest(@Nonnull AbstractModelRequest<?> request);
+
+		/**
+		 * Executes the passed request with the handler.
+		 * 
+		 * @param request
+		 *            The {@link AbstractModelRequest} to execute
 		 * @return The retrieved {@link JsonModel} or null
 		 * @throws Exception
 		 *             if the request threw an exception
 		 */
-		public JsonModel execRequest(AbstractModelRequest<?> request) throws Exception;
+		public JsonModel execRequest(@Nonnull AbstractModelRequest<?> request) throws Exception;
 	}
 
 	/**
@@ -102,7 +120,7 @@ public interface ContentLoader<R extends AbstractModelRequest<M>, M extends Json
 		 * @param newContent
 		 *            The new {@link JsonModel} content
 		 */
-		public void onContentUpdated(CONTENT newContent);
+		public void onContentUpdated(@Nonnull CONTENT newContent);
 	}
 
 }

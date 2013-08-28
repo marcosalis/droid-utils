@@ -21,6 +21,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Simple annotation to be used for marking methods which are known to perform
  * (possibly) long-running I/O operations such as network connections or disk
@@ -29,6 +31,7 @@ import java.lang.annotation.Target;
  * @since 1.0
  * @author Marco Salis
  */
+@Beta
 @Inherited
 @Target(ElementType.METHOD)
 // annotation not available at runtime

@@ -19,14 +19,20 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Workaround {@link InputStream} subclass to use when decoding a Bitmap or
  * large file from a network stream.
  * 
  * See Android bug #6066:<br>
  * {@link http://code.google.com/p/android/issues/detail?id=6066}
+ * 
+ * @since 1.0
  */
+@Beta
 public class FlushedInputStream extends FilterInputStream {
+
 	public FlushedInputStream(InputStream inputStream) {
 		super(inputStream);
 	}
@@ -48,4 +54,5 @@ public class FlushedInputStream extends FilterInputStream {
 		}
 		return totalBytesSkipped;
 	}
+
 }

@@ -15,21 +15,52 @@
  */
 package com.github.luluvise.droid_utils.cache;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.annotations.Beta;
 
 /**
+ * Base, simple interface that every content cache should implement in order to
+ * perform some common operations.
+ * 
  * TODO: consider implementing {@link com.google.common.cache.Cache}
  * 
  * @since 1.0
  * @author Marco Salis
  * 
  * @param <K>
- *            Cached keys
+ *            Cache keys type
  * @param <V>
- *            Cached values
+ *            Cached items type
  */
 @Beta
 public interface ContentCache<K, V> {
+
+	/**
+	 * Interface that implementations can use to notify a client component when
+	 * an item in the cache is removed/evicted. This is useful expecially for
+	 * space-consuming cache items, in order to avoid other classes holding a
+	 * reference to the old cache entry and preventing it from being GCed.
+	 * 
+	 * @since 1.0
+	 */
+	@Beta
+	public interface OnEntryRemovedListener<K, V> {
+
+		/**
+		 * Called when a cache entry has been removed.
+		 * 
+		 * @param evicted
+		 *            true if the item has been removed for space constraints,
+		 *            false otherwise (because it's been explicitly removed or
+		 *            replaced)
+		 * @param key
+		 *            the cache key of the removed element
+		 * @param value
+		 *            the removed element
+		 */
+		public void onEntryRemoved(boolean evicted, @Nonnull K key, @Nonnull V value);
+	}
 
 	/**
 	 * Completely clears the cache contents.

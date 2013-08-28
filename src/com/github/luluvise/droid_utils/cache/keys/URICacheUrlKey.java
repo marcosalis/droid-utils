@@ -17,6 +17,7 @@ package com.github.luluvise.droid_utils.cache.keys;
 
 import java.net.URI;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 import android.os.Parcel;
@@ -59,7 +60,9 @@ public class URICacheUrlKey implements CacheUrlKey, Parcelable {
 	 */
 	protected static final HashFunction HASH_FUNCTION = Hashing.murmur3_128();
 
+	@Nonnull
 	private final String mKey;
+	@Nonnull
 	private final URI mUri;
 
 	/**
@@ -72,7 +75,7 @@ public class URICacheUrlKey implements CacheUrlKey, Parcelable {
 	 *             if the passed URL is not a valid {@link URI} or is not
 	 *             suitable for being converted to a cache key
 	 */
-	public URICacheUrlKey(String url) throws IllegalArgumentException {
+	public URICacheUrlKey(@Nonnull String url) throws IllegalArgumentException {
 		mUri = URI.create(url);
 		// process URI
 		mKey = hashUri();
@@ -90,7 +93,8 @@ public class URICacheUrlKey implements CacheUrlKey, Parcelable {
 	 *             if the passed URL is not a valid {@link URI} or is not
 	 *             suitable for being converted to a cache key
 	 */
-	protected URICacheUrlKey(String url, String key) throws IllegalArgumentException {
+	protected URICacheUrlKey(@Nonnull String url, @Nonnull String key)
+			throws IllegalArgumentException {
 		mUri = URI.create(url);
 		mKey = key;
 	}

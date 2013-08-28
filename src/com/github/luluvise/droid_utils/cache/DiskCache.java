@@ -25,12 +25,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import android.content.Context;
+import android.os.Process;
 
 import com.github.luluvise.droid_utils.annotations.NotForUIThread;
+import com.github.luluvise.droid_utils.concurrent.PriorityThreadFactory;
 import com.github.luluvise.droid_utils.lib.CacheUtils;
 import com.github.luluvise.droid_utils.lib.CacheUtils.CacheLocation;
 import com.github.luluvise.droid_utils.lib.TimeDroidUtils;
-import com.github.luluvise.droid_utils.logging.LoggedThreadFactory;
 import com.google.common.annotations.Beta;
 
 /**
@@ -85,7 +86,8 @@ public abstract class DiskCache<V> implements ContentCache<String, V> {
 	public static final long DEFAULT_EXPIRE_IN_SEC = TimeDroidUtils.DAY * 5;
 
 	protected static final ExecutorService PURGE_EXECUTOR = Executors
-			.newSingleThreadExecutor(new LoggedThreadFactory("DiskCache purge executor thread"));
+			.newSingleThreadExecutor(new PriorityThreadFactory("DiskCache purge executor thread",
+					Process.THREAD_PRIORITY_BACKGROUND));
 
 	protected final File mCacheLocation;
 

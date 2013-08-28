@@ -27,8 +27,10 @@ import java.util.regex.Pattern;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -46,6 +48,7 @@ import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
 import com.github.luluvise.droid_utils.lib.CacheUtils.CacheLocation;
+import com.google.api.client.extensions.android.AndroidUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 
@@ -180,6 +183,16 @@ public class DroidUtils {
 	}
 
 	/**
+	 * Returns whether the SDK version is the given level or higher.
+	 * 
+	 * @see android.os.Build.VERSION_CODES
+	 * @see {@link AndroidUtils#isMinimumSdkLevel(int)}
+	 */
+	public static boolean isMinimumSdkLevel(int minimumSdkLevel) {
+		return Build.VERSION.SDK_INT >= minimumSdkLevel;
+	}
+
+	/**
 	 * Generates an unique, stable UID that identifies the device where the user
 	 * is currently logged.
 	 * 
@@ -250,18 +263,24 @@ public class DroidUtils {
 	 * 
 	 * FIXME: SMS text is not displayed in Motorola devices
 	 * 
+	 * Note: if the passed {@link Context} is not an activity, the flag
+	 * {@link Intent#FLAG_ACTIVITY_NEW_TASK} will automatically be set to avoid
+	 * an Android runtime exception.
+	 * 
 	 * @param context
+	 *            The {@link Context} to start the intent with
 	 * @param number
 	 *            The phone number to send the SMS to
 	 * @param text
-	 *            The text of the SMS to send
+	 *            The preset text for the SMS
 	 * @return true if the SMS composer has been opened, false if telephony was
 	 *         not available on the device or the phone number wasn't in the
 	 *         accepted format by
 	 *         {@link PhoneNumberUtils#isWellFormedSmsAddress(String)}. In the
 	 *         latter case, the SMS composer is shown anyway with no recipients.
 	 */
-	public static boolean sendSms(Context context, String number, String text) {
+	public static boolean sendSms(@Nonnull Context context, @CheckForNull String number,
+			@Nullable String text) {
 		boolean success = true;
 		if (hasTelephony(context)) {
 			if (number == null || !PhoneNumberUtils.isWellFormedSmsAddress(number)) {
@@ -273,6 +292,10 @@ public class DroidUtils {
 			smsIntent.putExtra(SMS_BODY_EXTRA, text);
 			// Intent.EXTRA_TEXT added only as a fallback
 			smsIntent.putExtra(Intent.EXTRA_TEXT, text);
+
+			if (!(context instanceof Activity)) {
+				smsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			}
 			context.startActivity(smsIntent);
 			return true;
 		} else {
@@ -286,13 +309,23 @@ public class DroidUtils {
 	 * 
 	 * As {@link #sendSms(Context, String, String)} but allows to use multiple
 	 * recipients for the SMS message.
+	 * 
+	 * @param context
+	 *            The {@link Context} to start the intent with
+	 * @param numbers
+	 *            An array of recipients phone numbers
+	 * @param text
+	 *            The preset text for the SMS
+	 * @return true if the SMS composer has been opened, false otherwise (for
+	 *         example, because the device has no telephony)
 	 */
-	public static boolean sendSmsToMany(Context context, String[] numbers, String text) {
+	public static boolean sendSmsToMany(@Nonnull Context context, @Nonnull String[] numbers,
+			@Nullable String text) {
 		if (numbers.length == 1) { // one recipient only, call sendSms()
 			return sendSms(context, numbers[0], text);
 		} // more than one recipient
 		if (hasTelephony(context)) {
-			List<String> filteredNumbers = new ArrayList<String>(numbers.length);
+			final List<String> filteredNumbers = new ArrayList<String>(numbers.length);
 			for (String number : numbers) {
 				if (number != null && PhoneNumberUtils.isWellFormedSmsAddress(number)) {
 					filteredNumbers.add(number);
@@ -305,6 +338,10 @@ public class DroidUtils {
 			smsIntent.putExtra(SMS_BODY_EXTRA, text);
 			// Intent.EXTRA_TEXT added only as a fallback
 			smsIntent.putExtra(Intent.EXTRA_TEXT, text);
+
+			if (!(context instanceof Activity)) {
+				smsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			}
 			context.startActivity(smsIntent);
 			return true;
 		}
@@ -326,9 +363,12 @@ public class DroidUtils {
 	 * email, either in plain text or HTML.
 	 * 
 	 * @param email
+	 *            The email address to send the message to
 	 * @param subject
+	 *            The email subject
 	 * @param body
-	 * @return
+	 *            The email body
+	 * @return The {@link Uri} for the intent to send the email
 	 */
 	@Nonnull
 	public static Uri buildEmailUri(String email, String subject, CharSequence body) {
@@ -338,31 +378,84 @@ public class DroidUtils {
 		builder.append("&body=").append(body);
 		String uriText = builder.toString().replace(" ", "%20");
 		return Uri.parse(uriText);
-
 	}
 
 	/**
 	 * Create a chooser intent to open the email composer with the specified
-	 * email, subject and message.
+	 * single email recipient, subject and message.
 	 * 
-	 * @param activity
-	 *            The {@link Activity} to start the chooser intent
-	 * @param email
-	 *            The email to send the message
+	 * @param context
+	 *            The {@link Context} to start the chooser intent with
+	 * @param chooserMessage
+	 *            The (optional) message to display in the intent chooser
+	 * @param recipient
+	 *            The email address to send the message to
 	 * @param subject
 	 *            The subject of the message
 	 * @param message
-	 *            The message
+	 *            The email message
 	 */
-	public static void sendEmail(@Nonnull Activity activity, String chooserMessage, String email,
-			String subject, String message) {
+	public static void sendEmail(@Nonnull Context context, @Nullable String chooserMessage,
+			@Nullable String recipient, @Nullable String subject, @Nullable String message) {
+		sendEmail(context, chooserMessage, new String[] { recipient }, subject, message);
+	}
+
+	/**
+	 * Create a chooser intent to open the email composer with the specified
+	 * email recipients, subject and message.
+	 * 
+	 * Note: if the passed {@link Context} is not an activity, the flag
+	 * {@link Intent#FLAG_ACTIVITY_NEW_TASK} will automatically be set to avoid
+	 * an Android runtime exception.
+	 * 
+	 * @param context
+	 *            The {@link Context} to start the chooser intent with
+	 * @param chooserMessage
+	 *            The (optional) message to display in the intent chooser
+	 * @param recipients
+	 *            The email addresses array to send the message to
+	 * @param subject
+	 *            The subject of the message
+	 * @param message
+	 *            The email message
+	 */
+	public static void sendEmail(@Nonnull Context context, @Nullable String chooserMessage,
+			@Nonnull String[] recipients, @Nullable String subject, @Nullable String message) {
 		final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
-		final String recipientList[] = { email };
-		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, recipientList);
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, recipients);
 		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
 		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, message);
 		emailIntent.setType("plain/text");
-		activity.startActivity(Intent.createChooser(emailIntent, chooserMessage));
+		final Intent intent = Intent.createChooser(emailIntent, chooserMessage);
+		if (!(context instanceof Activity)) {
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		}
+		context.startActivity(intent);
+	}
+
+	/**
+	 * Returns an {@link Intent} with action {@link Intent#ACTION_VIEW} to open
+	 * the Google Play page for the passed package name.
+	 * 
+	 * @param packageName
+	 *            A full, valid Google Play application package name
+	 */
+	@Nonnull
+	public static Intent getApplicationMarketPage(@Nonnull String packageName) {
+		return getViewUrlIntent("market://details?id=" + packageName);
+	}
+
+	/**
+	 * Creates an {@link Intent} to open the passed URI with the default
+	 * application that handles {@link Intent#ACTION_VIEW} for that content.
+	 * 
+	 * @param uri
+	 *            The URI string (must be non null)
+	 * @return The created intent
+	 */
+	@Nonnull
+	public static Intent getViewUrlIntent(@Nonnull String uri) {
+		return new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
 	}
 
 	/**
@@ -371,10 +464,10 @@ public class DroidUtils {
 	 * @param context
 	 *            A Context
 	 * @param action
-	 *            The action to check
+	 *            The action to check (see {@link Intent} docs
 	 * @return true if an Intent is available, false otherwise
 	 */
-	public static boolean isIntentAvailable(@Nonnull Context context, String action) {
+	public static boolean isIntentAvailable(@Nonnull Context context, @Nonnull String action) {
 		final PackageManager packageManager = context.getPackageManager();
 		final Intent intent = new Intent(action);
 		List<ResolveInfo> list = packageManager.queryIntentActivities(intent,
@@ -383,16 +476,22 @@ public class DroidUtils {
 	}
 
 	/**
-	 * Adds the flags {@link Intent#FLAG_ACTIVITY_NEW_TASK} and
+	 * Adds the flags {@link Intent#FLAG_ACTIVITY_NEW_TASK} and if possible
 	 * {@link Intent#FLAG_ACTIVITY_CLEAR_TASK} (only available from API 11) to
-	 * the passed intent
+	 * the passed intent.
+	 * 
+	 * From the {@link Intent#FLAG_ACTIVITY_NEW_TASK} docs: <b>This flag can not
+	 * be used when the caller is requesting a result from the activity being
+	 * launched.</b>
 	 * 
 	 * @param intent
 	 *            The {@link Intent} to be modified
 	 */
-	@TargetApi(11)
+	@SuppressLint("InlinedApi")
 	public static void setNewTaskFlag(@Nonnull Intent intent) {
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		if (isMinimumSdkLevel(11)) {
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		}
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 	}
 

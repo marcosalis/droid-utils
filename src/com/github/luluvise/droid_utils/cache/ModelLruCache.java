@@ -58,7 +58,7 @@ public class ModelLruCache<K, V> extends LruCache<K, V> implements ContentCache<
 	 *         the implementation supports null values.)
 	 */
 	@CheckForNull
-	public synchronized V putIfAbsent(K key, V value) {
+	public synchronized V putIfAbsent(@Nonnull K key, V value) {
 		V old = null;
 		if ((old = get(key)) == null) {
 			return put(key, value);

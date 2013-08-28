@@ -48,7 +48,9 @@ public class SimpleCacheUrlKey implements CacheUrlKey {
 	 */
 	protected static final HashFunction HASH_FUNCTION = Hashing.murmur3_128();
 
+	@Nonnull
 	private final String mKey;
+	@Nonnull
 	private final String mUrl;
 
 	/**

@@ -15,6 +15,8 @@
  */
 package com.github.luluvise.droid_utils;
 
+import android.os.StrictMode;
+
 /**
  * DroidUtils configuration global constants
  * 
@@ -30,7 +32,27 @@ public class DroidConfig {
 	/**
 	 * Global flag to enable library's LogCat logging messages and other debug
 	 * configuration settings.
+	 * 
+	 * <p>
+	 * <b>Warning:</b> STRICT_MODE <u>must always</u> be disabled when releasing
+	 * as it can affect performances and show unwanted data/feedback to the
+	 * users!
+	 * </p>
 	 */
 	public static final boolean DEBUG = @droid.debug@;
+	
+	/**
+	 * Global flag to enable the strictest {@link StrictMode} on the
+	 * application, using invasive penalties to notify the developer. Note that
+	 * when the {@link #DEBUG} mode is active, some logging strict mode features
+	 * are already enabled.
+	 * 
+	 * <p>
+	 * <b>Warning:</b> STRICT_MODE <u>must always</u> be disabled when releasing
+	 * as it can affect performances and show unwanted data/feedback to the
+	 * users!
+	 * </p>
+	 */
+	public static final boolean STRICT_MODE = @droid.strict_mode@;
 
 }

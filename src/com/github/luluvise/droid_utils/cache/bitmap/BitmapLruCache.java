@@ -15,9 +15,7 @@
  */
 package com.github.luluvise.droid_utils.cache.bitmap;
 
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Future;
-
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -57,32 +55,34 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 
 	private static final String TAG = BitmapLruCache.class.getSimpleName();
 
-	private final String mName;
-	private final ConcurrentMap<K, Future<Bitmap>> mDownloadsCache;
+	@CheckForNull
+	private final String mLogName;
+	@CheckForNull
+	private final OnEntryRemovedListener<K, Bitmap> mEntryRemovedListener;
 
 	/**
 	 * Constructor for a BitmapCache.<br>
 	 * Call {@link ActivityManager#getMemoryClass()} to properly size this cache
 	 * depending on the maximum available application memory heap.
 	 * 
-	 * @param cacheName
+	 * @param cacheLogName
 	 *            The (optional) name of the cache (for logging purposes)
 	 * @param maxSize
 	 *            The max memory occupation, in bytes, that the cache will ever
 	 *            occupy when full.
-	 * @param downloadsCache
-	 *            An (optional) {@link ConcurrentMap} that uses the same keys as
-	 *            this {@link BitmapLruCache} to allow Bitmap entries to be
-	 *            removed when using a {@link CacheMemoizer} to populate the
-	 *            cache.
+	 * @param listener
+	 *            An (optional) {@link OnEntryRemovedListener} to allow Bitmap
+	 *            entries to be removed when using another component that keeps
+	 *            references to them (such as a {@link CacheMemoizer} to
+	 *            populate the cache), in order to avoid memory leaks and OOM.
 	 */
-	public BitmapLruCache(@Nullable String cacheName, @Nonnegative int maxSize,
-			@Nullable ConcurrentMap<K, Future<Bitmap>> downloadsCache) {
+	public BitmapLruCache(@Nullable String cacheLogName, @Nonnegative int maxSize,
+			@Nullable OnEntryRemovedListener<K, Bitmap> listener) {
 		super(maxSize);
-		mName = cacheName;
-		mDownloadsCache = downloadsCache;
+		mLogName = cacheLogName;
+		mEntryRemovedListener = listener;
 		if (DroidConfig.DEBUG) {
-			Log.i(TAG, mName + ": max cache size is set to " + maxSize + " bytes");
+			Log.i(TAG, mLogName + ": max cache size is set to " + maxSize + " bytes");
 		}
 	}
 
@@ -114,7 +114,8 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 	 *         indicate that the map previously associated null with the key, if
 	 *         the implementation supports null values.)
 	 */
-	public synchronized Bitmap putIfAbsent(K key, Bitmap value) {
+	@CheckForNull
+	public synchronized Bitmap putIfAbsent(@Nonnull K key, Bitmap value) {
 		Bitmap old = null;
 		if ((old = get(key)) == null) {
 			return put(key, value);
@@ -129,7 +130,7 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 	@Override
 	public void clear() {
 		if (DroidConfig.DEBUG) {
-			Log.i(TAG, mName + " session stats: hits " + hitCount() + ", miss " + missCount());
+			Log.i(TAG, mLogName + " session stats: hits " + hitCount() + ", miss " + missCount());
 		}
 		evictAll();
 	}
@@ -145,15 +146,15 @@ public class BitmapLruCache<K> extends LruCache<K, Bitmap> implements ContentCac
 	protected void entryRemoved(boolean evicted, K key, Bitmap oldValue, Bitmap newValue) {
 		super.entryRemoved(evicted, key, oldValue, newValue);
 		// remove evicted Bitmap task from the downloads cache if exists
-		if (mDownloadsCache != null) {
-			mDownloadsCache.remove(key);
+		if (mEntryRemovedListener != null) {
+			mEntryRemovedListener.onEntryRemoved(evicted, key, oldValue);
 		}
 
 		if (DroidConfig.DEBUG) {
 			if (oldValue != null && newValue != null) {
-				Log.w(TAG, mName + ": item " + key + " replaced: this should never happen!");
+				Log.w(TAG, mLogName + ": item " + key + " replaced: this should never happen!");
 			}
-			Log.v(TAG, mName + ": item removed, cache size is now " + size() + " bytes");
+			Log.v(TAG, mLogName + ": item removed, cache size is now " + size() + " bytes");
 		}
 	}
 

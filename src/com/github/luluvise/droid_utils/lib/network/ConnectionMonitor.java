@@ -24,7 +24,9 @@ import android.app.Application;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
+import com.github.luluvise.droid_utils.logging.LogUtils;
 import com.google.common.annotations.Beta;
 
 /**
@@ -50,6 +52,8 @@ public enum ConnectionMonitor implements ConnectionMonitorInterface {
 	public static ConnectionMonitor get() {
 		return INSTANCE;
 	}
+
+	private final static String TAG = ConnectionMonitor.class.getSimpleName();
 
 	private final AtomicBoolean mConnectionActive;
 	private final AtomicBoolean mIsRegistered;
@@ -80,12 +84,26 @@ public enum ConnectionMonitor implements ConnectionMonitorInterface {
 	 *            The {@link Application} object
 	 */
 	public void register(@Nonnull Application application) {
-		if (!mIsRegistered.compareAndSet(false, true)) {
-			throw new IllegalStateException("ConnectionMonitor multiple initialization attempt");
+		if (mIsRegistered.compareAndSet(false, true)) {
+			// permanently register the listener using the application context
+			final IntentFilter filter = NetworkReceiver.getFilter();
+			LocalBroadcastManager.getInstance(application).registerReceiver(mNetReceiver, filter);
+		} else {
+			LogUtils.log(Log.WARN, TAG, "ConnectionMonitor multiple initialization attempt");
 		}
-		// permanently register the listener using the application context
-		final IntentFilter filter = NetworkReceiver.getFilter();
-		LocalBroadcastManager.getInstance(application).registerReceiver(mNetReceiver, filter);
+	}
+
+	/**
+	 * Unregisters the {@link NetworkReceiver} to stop being notified about
+	 * network state changes.
+	 * 
+	 * @param application
+	 *            The {@link Application} object
+	 */
+	public void unregister(@Nonnull Application application) {
+		if (mIsRegistered.compareAndSet(true, false)) {
+			LocalBroadcastManager.getInstance(application).unregisterReceiver(mNetReceiver);
+		}
 	}
 
 	/**

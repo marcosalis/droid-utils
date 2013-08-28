@@ -38,6 +38,8 @@ import com.google.common.annotations.Beta;
  * Callback class to use with a {@link BitmapProxy} to set the bitmap to an
  * {@link ImageView} if this is still existing and attached to an Activity.
  * 
+ * TODO: handle placeholder setting when the bitmap loading fails
+ * 
  * @since 1.0
  * @author Marco Salis
  */
@@ -54,10 +56,15 @@ public class BitmapAsyncSetter {
 		 * Called when the retrieved bitmap image has been set into the
 		 * {@link ImageView}
 		 * 
+		 * @param url
+		 *            The {@link CacheUrlKey} of the bitmap
 		 * @param bitmap
 		 *            The set {@link Bitmap}
+		 * @param source
+		 *            The {@link BitmapSource} of the bitmap
 		 */
-		public void onBitmapImageSet(Bitmap bitmap);
+		public void onBitmapImageSet(@Nonnull CacheUrlKey url, @Nonnull Bitmap bitmap,
+				@Nonnull BitmapSource source);
 	}
 
 	/**
@@ -70,9 +77,9 @@ public class BitmapAsyncSetter {
 	}
 
 	/**
-	 * Low-level debug mode for bitmap debugging.
+	 * Low-level debug mode for bitmap debugging (disabled by default).
 	 */
-	protected static final boolean BITMAP_DEBUG = DroidConfig.DEBUG && true;
+	protected static final boolean BITMAP_DEBUG = DroidConfig.DEBUG && false;
 
 	private static final String TAG = BitmapAsyncSetter.class.getSimpleName();
 
@@ -139,14 +146,14 @@ public class BitmapAsyncSetter {
 	 *            The {@link Bitmap} image to set
 	 */
 	@OverridingMethodsMustInvokeSuper
-	public void setBitmapSync(@Nonnull Bitmap bitmap) {
+	public void setBitmapSync(@Nonnull CacheUrlKey key, @Nonnull Bitmap bitmap) {
 		final ImageView view = mImageView.get();
 		if (view != null) {
 			setImageBitmap(view, bitmap, BitmapSource.MEMORY);
 			if (mListener != null) { // notify caller
 				final OnBitmapImageSetListener listener = mListener.get();
 				if (listener != null) {
-					listener.onBitmapImageSet(bitmap);
+					listener.onBitmapImageSet(key, bitmap, BitmapSource.MEMORY);
 				}
 			}
 		} else if (BITMAP_DEBUG) { // debugging
@@ -159,14 +166,16 @@ public class BitmapAsyncSetter {
 	 * attempting to set a {@link Bitmap} to an {@link ImageView} if this is not
 	 * null and image tags match.
 	 * 
-	 * @param url
+	 * @param key
 	 *            The {@link CacheUrlKey} of the bitmap
 	 * @param bitmap
 	 *            The {@link Bitmap} image to set
+	 * @param source
+	 *            The {@link BitmapSource} of the bitmap
 	 */
 	@NotForUIThread
 	@OverridingMethodsMustInvokeSuper
-	public void onBitmapReceived(@Nonnull final CacheUrlKey url, @Nonnull Bitmap bitmap,
+	public void onBitmapReceived(@Nonnull final CacheUrlKey key, @Nonnull Bitmap bitmap,
 			@Nonnull final BitmapSource source) {
 		// do not pass this reference to the runnable
 		final ImageView view = mImageView.get();
@@ -182,30 +191,30 @@ public class BitmapAsyncSetter {
 					if (innerViewRef != null) { // context still valid
 						if (bitmap != null) { // bitmap not GC'd yet
 							final Object tag = innerViewRef.getTag();
-							if (tag != null && tag.equals(url.hash())) {
+							if (tag != null && tag.equals(key.hash())) {
 								setImageBitmap(innerViewRef, bitmap, source);
 								if (mListener != null) { // notify caller
 									final OnBitmapImageSetListener listener = mListener.get();
 									if (listener != null) {
-										listener.onBitmapImageSet(bitmap);
+										listener.onBitmapImageSet(key, bitmap, source);
 										mListener.clear();
 									}
 								}
 							} else if (BITMAP_DEBUG) { // debugging
-								Log.v(TAG, "Runnable: view tag not matching: " + url.getUrl());
+								Log.v(TAG, "Runnable: view tag not matching: " + key.getUrl());
 							}
 						} else if (BITMAP_DEBUG) { // debugging
-							Log.v(TAG, "Runnable: null bitmap reference: " + url.getUrl());
+							Log.v(TAG, "Runnable: null bitmap reference: " + key.getUrl());
 						}
 					} else if (BITMAP_DEBUG) { // debugging
-						Log.d(TAG, "Runnable: null image view: " + url.getUrl());
+						Log.d(TAG, "Runnable: null image view: " + key.getUrl());
 					}
 					// remove runnable from the handler queue
 					mHandler.removeCallbacks(this);
 				}
 			});
 		} else if (BITMAP_DEBUG) { // debugging
-			Log.d(TAG, "Async: null image view: " + url.getUrl());
+			Log.d(TAG, "Async: null image view: " + key.getUrl());
 		}
 	}
 

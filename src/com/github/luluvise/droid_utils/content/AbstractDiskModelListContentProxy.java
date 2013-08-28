@@ -117,8 +117,8 @@ public abstract class AbstractDiskModelListContentProxy<MODEL extends JsonModel,
 	}
 
 	/**
-	 * Uses {@link #putModel(LuluviseModel, boolean)} with invalidate flag set
-	 * by default to true.
+	 * Uses {@link #putModel(JsonModel, boolean)} with invalidate flag set by
+	 * default to true.
 	 */
 	@Override
 	@NotForUIThread

@@ -70,7 +70,6 @@ public final class HashUtils {
 	public interface CacheKey {
 
 		public String hash();
-
 	}
 
 }

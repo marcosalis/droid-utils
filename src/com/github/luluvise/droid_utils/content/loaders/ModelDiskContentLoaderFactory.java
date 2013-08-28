@@ -50,4 +50,5 @@ public interface ModelDiskContentLoaderFactory<R extends AbstractModelRequest<M>
 	 */
 	public ContentLoader<R, M> getContentLoader(
 			ModelLruCache<String, ExpiringFutureTask<M>> memoryCache, ModelDiskCache<M> diskCache);
+
 }
