@@ -23,6 +23,7 @@ import android.content.Context;
 
 import com.github.luluvise.droid_utils.R;
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Helper class containing general static utility methods to handle time,
@@ -62,7 +63,7 @@ public class TimeDroidUtils {
 		// calculate the seconds span between now and the date
 		final int span = (int) ((now - time) / 1000);
 
-		// get timeSpan string
+		// get time span string
 		return getTimespanString(context, span);
 	}
 
@@ -70,17 +71,15 @@ public class TimeDroidUtils {
 	 * Calculates and returns a string from the given timeSpan, for example
 	 * "3 months ago" or "an hour ago".
 	 * 
-	 * NOTE: This method is protected for testing purposes
-	 * 
 	 * @param context
 	 *            {@link Context} to get the string resource from
 	 * @param timeSpan
-	 *            timeSpan in seconds
-	 * @return calculated string
-	 * 
+	 *            The time span in seconds
+	 * @return The localized string
 	 */
 	@Nonnull
-	protected static String getTimespanString(@Nonnull Context context, int timeSpan) {
+	@VisibleForTesting
+	static String getTimespanString(@Nonnull Context context, int timeSpan) {
 
 		// this also covers the (unlikely) case of a negative, hence future time
 		if (timeSpan <= MINUTE * 5) {
