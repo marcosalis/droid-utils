@@ -16,26 +16,20 @@
 package com.github.luluvise.droid_utils.lib;
 
 import java.util.Date;
-import java.util.UnknownFormatConversionException;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import android.content.Context;
-import android.text.format.DateUtils;
 
 import com.github.luluvise.droid_utils.R;
-import com.github.luluvise.droid_utils.logging.LogUtils;
 import com.google.common.annotations.Beta;
 
 /**
  * Helper class containing general static utility methods to handle time,
  * relative time spans and time stamps.
  * 
- * TODO: unit tests
- * 
  * @since 1.0
- * @author Marco Salis
+ * @author Marco Salis, Gerlac Farrus
  */
 @Beta
 public class TimeDroidUtils {
@@ -56,56 +50,60 @@ public class TimeDroidUtils {
 	 * Returns a localized time span string from the given event date to the
 	 * current system time, for example "3 months ago".
 	 * 
-	 * This method relies on the {@link DateUtils} class for some of the string
-	 * definitions.
-	 * 
 	 * @param date
 	 *            The date of the event
-	 * @return The localized string or null if an error occurred
+	 * @return The localized string
 	 */
-	@CheckForNull
+	@Nonnull
 	public static CharSequence getTimespanString(@Nonnull Context context, @Nonnull Date date) {
 		final long now = System.currentTimeMillis();
 		final long time = date.getTime();
+
 		// calculate the seconds span between now and the date
-		final int span = (int) ((now - time) / 1000); // to seconds
-		// DateUtils.
-		// this also covers the (unlikely) case of a negative, hence future time
-		if (span < MINUTE) {
-			return context.getString(R.string.time_moment_ago);
-		} else if (span < 2 * MINUTE) {
-			return context.getString(R.string.time_minute_ago);
-		} else if (span < 45 * MINUTE) { // minutes
-			return getRelativeTimeSpanString(time, now, DateUtils.MINUTE_IN_MILLIS);
-		} else if (span < 2 * HOUR) {
-			return context.getString(R.string.time_hour_ago);
-		} else if (span < DAY) { // hours
-			return getRelativeTimeSpanString(time, now, DateUtils.HOUR_IN_MILLIS);
-		} else if (span < 2 * DAY) {
-			return context.getString(R.string.time_yesterday);
-		} else if (span < MONTH) { // days
-			return context.getString(R.string.time_days_ago, (int) (span / DAY));
-		} else if (span < 2 * MONTH) {
-			return context.getString(R.string.time_month_ago);
-		} else if (span < YEAR) { // months
-			return context.getString(R.string.time_months_ago, (int) (span / MONTH));
-		} else if (span < 18 * MONTH) {
-			return context.getString(R.string.time_year_ago);
-		} else { // years
-			return context.getString(R.string.time_years_ago, (int) (span / YEAR));
-		}
+		final int span = (int) ((now - time) / 1000);
+
+		// get timeSpan string
+		return getTimespanString(context, span);
 	}
 
-	@CheckForNull
-	private static CharSequence getRelativeTimeSpanString(long time, long now, long minResolution) {
-		CharSequence spanString = null;
-		try {
-			spanString = DateUtils.getRelativeTimeSpanString(time, now, minResolution);
-		} catch (UnknownFormatConversionException e) {
-			// with some Android version, it unexpectedly throws this exception
-			LogUtils.logException(e);
+	/**
+	 * Calculates and returns a string from the given timeSpan, for example
+	 * "3 months ago" or "an hour ago".
+	 * 
+	 * NOTE: This method is protected for testing purposes
+	 * 
+	 * @param context
+	 *            {@link Context} to get the string resource from
+	 * @param timeSpan
+	 *            timeSpan in seconds
+	 * @return calculated string
+	 * 
+	 */
+	@Nonnull
+	protected static String getTimespanString(@Nonnull Context context, int timeSpan) {
+
+		// this also covers the (unlikely) case of a negative, hence future time
+		if (timeSpan <= MINUTE * 5) {
+			return context.getString(R.string.time_moment_ago);
+		} else if (timeSpan < 45 * MINUTE) { // minutes
+			return context.getString(R.string.time_minutes_ago, (int) (timeSpan / MINUTE));
+		} else if (timeSpan <= 2 * HOUR) { // an hour
+			return context.getString(R.string.time_hour_ago);
+		} else if (timeSpan < DAY) { // hours
+			return context.getString(R.string.time_few_hours_ago);
+		} else if (timeSpan < 2 * DAY) { // yesterday
+			return context.getString(R.string.time_yesterday);
+		} else if (timeSpan < MONTH) { // days
+			return context.getString(R.string.time_days_ago, (int) (timeSpan / DAY));
+		} else if (timeSpan < 2 * MONTH) { // a month
+			return context.getString(R.string.time_month_ago);
+		} else if (timeSpan < YEAR) { // months
+			return context.getString(R.string.time_months_ago, (int) (timeSpan / MONTH));
+		} else if (timeSpan < 2 * YEAR) { // a year
+			return context.getString(R.string.time_year_ago);
+		} else { // years
+			return context.getString(R.string.time_years_ago, (int) (timeSpan / YEAR));
 		}
-		return spanString;
 	}
 
 }
