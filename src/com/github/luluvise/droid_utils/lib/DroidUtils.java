@@ -225,9 +225,9 @@ public class DroidUtils {
 			androidId = android.provider.Settings.Secure.getString(context.getContentResolver(),
 					android.provider.Settings.Secure.ANDROID_ID);
 		}
-		if ("9774d56d682e549c".equals(androidId)) { // broken Android ID
-			// TODO: fallback
-		}
+		// if ("9774d56d682e549c".equals(androidId)) { // broken Android ID
+		// TODO: fallback
+		// }
 		if (androidId == null) {
 			androidId = "";
 		}

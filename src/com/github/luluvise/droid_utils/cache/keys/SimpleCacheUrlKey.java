@@ -62,15 +62,15 @@ public class SimpleCacheUrlKey implements CacheUrlKey {
 	 * @throws NullPointerException
 	 *             if the passed string URL is null
 	 */
-	public SimpleCacheUrlKey(@Nonnull String url) throws IllegalArgumentException {
+	public SimpleCacheUrlKey(@Nonnull String url) {
 		Preconditions.checkNotNull(url);
 		mUrl = url;
 		// process URI
 		mKey = HashUtils.getHash(HASH_FUNCTION, url);
 	}
 
-	public SimpleCacheUrlKey(Parcel source) throws IllegalArgumentException {
-		// Reconstruct from the Parcel
+	public SimpleCacheUrlKey(Parcel source) {
+		// reconstruct from the Parcel
 		mUrl = source.readString();
 		mKey = source.readString();
 	}
